@@ -1,16 +1,17 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { ScrollView, View, StyleSheet, Dimensions, Pressable, ActivityIndicator, StatusBar, Image } from 'react-native';
 import { Text, Card, IconButton, useTheme, Divider, Button, Surface, MD3Theme } from 'react-native-paper';
 import { useNavigation, NavigationProp } from '@react-navigation/native';
 import styled from 'styled-components/native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { useGetMyJobsQuery } from '@features/worker/workerApiSlice';
 import { LOGO_IMAGE } from '@assets/images';
+import { User } from '@types';
 
 type RootStackParamList = {
   Profile: undefined;
   JobList: { filter: 'Pending' | 'Completed' };
-  // Add other screens here
 };
 
 const { width } = Dimensions.get('window');
@@ -19,19 +20,42 @@ const DashboardScreen = () => {
   const theme = useTheme();
   const themedStyles = styles(theme);
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
-  const { data: jobs, isLoading, isError, error } = useGetMyJobsQuery();
+  const { data: jobs, isLoading: isLoadingJobs, isError, error } = useGetMyJobsQuery();
+  const [user, setUser] = useState<User | null>(null);
+  const [isLoadingUser, setIsLoadingUser] = useState(true);
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const userData = await AsyncStorage.getItem('user');
+        if (userData) {
+          setUser(JSON.parse(userData));
+        }
+      } catch (e) {
+        console.error('Failed to fetch user from storage', e);
+      } finally {
+        setIsLoadingUser(false);
+      }
+    };
+
+    fetchUser();
+  }, []);
+
+  if (isLoadingJobs || isLoadingUser) {
+    return <CenteredContainer><ActivityIndicator animating={true} size="large" /></CenteredContainer>;
+  }
 
   if (isError) {
     return <CenteredContainer><Text>Error fetching jobs.</Text></CenteredContainer>;
   }
 
-  // Calculate stats from fetched data
-  const totalJobsCount = jobs?.length || 0;
-  const pendingCount = jobs?.filter((job) => job.status === 'Pending').length || 0;
-  const completedCount = jobs?.filter((job) => job.status === 'Completed').length || 0;
-  const urgentJobsCount = jobs?.filter((job) => job.priority === 'High' && job.status === 'Pending').length || 0;
+  const jobsData = jobs?.data || [];
 
-  // Navigation handlers
+  const totalJobsCount = jobsData.length;
+  const pendingCount = jobsData.filter((job) => job.status === 'Pending').length;
+  const completedCount = jobsData.filter((job) => job.status === 'Completed').length;
+  const urgentJobsCount = jobsData.filter((job) => job.priority === 'High' && job.status === 'Pending').length;
+
   const gotoProfile = () => navigation.navigate('Profile');
   const gotoPendingJobs = () => navigation.navigate('JobList', { filter: 'Pending' });
   const gotoCompletedJobs = () => navigation.navigate('JobList', { filter: 'Completed' });
@@ -39,26 +63,19 @@ const DashboardScreen = () => {
   return (
     <ScrollView style={themedStyles.container}>
       <StatusBar backgroundColor="#ffffff" barStyle="dark-content" />
-       <View style={themedStyles.headerContainer}>
-          <View style={themedStyles.logoSection}>
-            <View style={themedStyles.logoImageContainer}>
-              <Image
-                source={LOGO_IMAGE}
-                style={themedStyles.logoImage}
-                resizeMode="contain"
-              />
-            </View>
-          </View>
-        </View>
+      <View style={themedStyles.headerContainer}>
+        <Image source={LOGO_IMAGE} style={themedStyles.logoImage} resizeMode="contain" />
+      </View>
+
       <View style={themedStyles.viewcard}>
         <Card style={themedStyles.card} onPress={gotoProfile}>
           <View style={themedStyles.userInfo}>
             <IconButton icon="account-box" size={60} iconColor={theme.colors.secondary} onPress={gotoProfile} />
             <View style={themedStyles.textContainer}>
-              <Text style={themedStyles.userName}>Hello, Designer!</Text>
+              <Text style={themedStyles.userName}>Hello, {user?.name || 'Designer'}!</Text>
               <Text style={themedStyles.userInfoActive}>Active</Text>
-              <Text variant='bodyLarge'>Contact: (123) 456-7890</Text>
-              <Text variant='bodyLarge'>Email: designer@example.com</Text>
+              <Text variant='bodyLarge'>Contact: {user?.contact || 'N/A'}</Text>
+              <Text variant='bodyLarge'>Email: {user?.email || 'N/A'}</Text>
             </View>
           </View>
         </Card>
@@ -84,12 +101,12 @@ const DashboardScreen = () => {
           <Text style={themedStyles.cardTitle}>Job Summary:</Text>
           <View style={themedStyles.inlineRow}>
             <IconButton icon="calendar-multiple-check" size={20} />
-            <Text style={themedStyles.inlineItem}>Designer since 2023</Text>
+            <Text style={themedStyles.inlineItem}>{user?.position || 'Designer'} since {user?.joineddate || 'N/A'}</Text>
           </View>
           <Divider />
           <View style={themedStyles.inlineRow}>
             <IconButton icon="map-marker-radius" size={20} />
-            <Text style={themedStyles.inlineItem}>Main Branch</Text>
+            <Text style={themedStyles.inlineItem}>{user?.branch || 'Main Branch'}</Text>
           </View>
           <Divider />
           <View style={themedStyles.inlineRow}>
@@ -136,28 +153,16 @@ const styles = (theme: MD3Theme) => StyleSheet.create({
     backgroundColor: '#fff',
   },
    headerContainer: {
-    marginBottom: 50,
     alignItems: 'center',
-  },
-  logoSection: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  logoImageContainer: {
-    width: 50,
-    height: 50,
-    justifyContent: 'center',
-    alignItems: 'center',
+    marginVertical: 10,
   },
   logoImage: {
-    width: '100%',
-    height: '100%',
+    width: 100,
+    height: 50,
   },
   viewcard: {
     padding: 5,
     marginBottom: 10,
-    marginTop: 20,
   },
   card: {
     backgroundColor: theme.colors.onPrimary,
@@ -184,7 +189,7 @@ const styles = (theme: MD3Theme) => StyleSheet.create({
     paddingLeft: 10,
   },
   userName: {
-    ...theme.fonts.titleLarge,
+    ...theme.fonts.titleMedium,
     fontWeight: 'bold',
   },
   userInfoActive: {

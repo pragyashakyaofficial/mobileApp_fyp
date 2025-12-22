@@ -1,5 +1,5 @@
 import { apiSlice } from '@api/apiSlice';
-import { Job } from '@types';
+import { Job, PaginatedResponse } from '@types';
 
 // export const workerApiSlice = apiSlice.injectEndpoints({
 //   endpoints: builder => ({
@@ -22,7 +22,7 @@ import { Job } from '@types';
 // });
 export const workerApiSlice = apiSlice.injectEndpoints({
   endpoints: builder => ({
-    getMyJobs: builder.query<Job[], void>({
+    getMyJobs: builder.query<PaginatedResponse<Job>, void>({
       query: () => '/worker/jobs',
       async onQueryStarted(arg, { queryFulfilled }) {
         try {
@@ -34,8 +34,9 @@ export const workerApiSlice = apiSlice.injectEndpoints({
       },
       providesTags: (result) => {
         console.log('📊 getMyJobs result:', result);
-        return result
-          ? [...result.map(({ id }) => ({ type: 'Job' as const, id })), { type: 'Job', id: 'MY_JOBS_LIST' }]
+        const jobs = result?.data || [];
+        return jobs
+          ? [...jobs.map(({ id }) => ({ type: 'Job' as const, id })), { type: 'Job', id: 'MY_JOBS_LIST' }]
           : [{ type: 'Job', id: 'MY_JOBS_LIST' }];
       },
     }),

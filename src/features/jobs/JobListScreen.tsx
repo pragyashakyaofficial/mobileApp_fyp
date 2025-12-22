@@ -15,11 +15,12 @@ const JobListScreen = () => {
   const route = useRoute<JobListScreenRouteProp>();
   const filter = route.params?.filter;
   const [searchQuery, setSearchQuery] = React.useState('');
-  const { data: jobs, isLoading, isError, error } = useListJobsQuery();
+  const { data: jobsResponse, isLoading, isError, error } = useListJobsQuery();
 
   const onChangeSearch = (query: string) => setSearchQuery(query);
 
   const filteredJobs = React.useMemo(() => {
+    const jobs = jobsResponse?.data || [];
     if (!jobs) return [];
 
     let jobsToDisplay = jobs;
@@ -35,7 +36,7 @@ const JobListScreen = () => {
     }
 
     return jobsToDisplay;
-  }, [jobs, filter, searchQuery]);
+  }, [jobsResponse, filter, searchQuery]);
 
   if (isLoading) {
     return <Container><ActivityIndicator animating={true} /></Container>;
