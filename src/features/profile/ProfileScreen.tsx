@@ -183,10 +183,10 @@ const ProfileScreen = () => {
           </Card.Content>
         </Card> */}
 
-        <Card style={[styles.card, { backgroundColor: theme.colors.onPrimary }]}>
+        {/* <Card style={[styles.card, { backgroundColor: theme.colors.onPrimary }]}>
           <Card.Content>
             <Title style={styles.sectionTitle}>Settings</Title>
-            {/* <List.Item
+            <List.Item
               title="Push Notifications"
               description="Receive updates about new jobs and messages"
               left={props => <List.Icon {...props} icon="bell-outline" color={theme.colors.primary} />}
@@ -200,7 +200,7 @@ const ProfileScreen = () => {
               style={styles.listItem}
               titleStyle={styles.listItemTitle}
             />
-            <Divider style={styles.divider} /> */}
+            <Divider style={styles.divider} />
             <List.Item
               title="Location Sharing"
               description="Share location for job assignments"
@@ -216,7 +216,7 @@ const ProfileScreen = () => {
               titleStyle={styles.listItemTitle}
             />
           </Card.Content>
-        </Card>
+        </Card> */}
 
        
       </ScrollView>
