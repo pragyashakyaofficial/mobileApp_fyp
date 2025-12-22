@@ -5,12 +5,37 @@ import styled from 'styled-components/native';
 import { ActivityIndicator, Text } from 'react-native';
 import JobCard from './components/JobCard';
 import { useListJobsQuery } from './jobApiSlice';
+import { useRoute, RouteProp } from '@react-navigation/native';
+import { RootStackParamList } from '../../types/navigation';
+import { Job } from '@types';
+
+type JobListScreenRouteProp = RouteProp<RootStackParamList, 'JobList'>;
 
 const JobListScreen = () => {
+  const route = useRoute<JobListScreenRouteProp>();
+  const filter = route.params?.filter;
   const [searchQuery, setSearchQuery] = React.useState('');
   const { data: jobs, isLoading, isError, error } = useListJobsQuery();
 
   const onChangeSearch = (query: string) => setSearchQuery(query);
+
+  const filteredJobs = React.useMemo(() => {
+    if (!jobs) return [];
+
+    let jobsToDisplay = jobs;
+
+    if (filter) {
+      jobsToDisplay = jobsToDisplay.filter(job => job.status === filter);
+    }
+
+    if (searchQuery) {
+      jobsToDisplay = jobsToDisplay.filter(job =>
+        job.title.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+
+    return jobsToDisplay;
+  }, [jobs, filter, searchQuery]);
 
   if (isLoading) {
     return <Container><ActivityIndicator animating={true} /></Container>;
@@ -29,7 +54,7 @@ const JobListScreen = () => {
       />
       {/* TODO: Add filter options and implement search */}
       <FlatList
-        data={jobs}
+        data={filteredJobs}
         keyExtractor={item => item.id.toString()}
         renderItem={({ item }) => <JobCard job={item} />}
       />

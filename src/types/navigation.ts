@@ -4,4 +4,6 @@ export type RootStackParamList = {
   JobCompletion: { jobId: string };
   Login: undefined;
   Register: undefined;
+  Profile: undefined;
+  JobList: { filter?: 'Pending' | 'Completed' };
 };

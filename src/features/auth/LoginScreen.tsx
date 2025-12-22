@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { StyleSheet, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
+import { StyleSheet, KeyboardAvoidingView, Platform, ScrollView, StatusBar } from 'react-native';
 import { Button, Text, TextInput } from 'react-native-paper';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -75,6 +75,7 @@ const LoginScreen = () => {
       style={styles.keyboardAvoid}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
+     <StatusBar backgroundColor="#fff" barStyle="dark-content" />
       <ScrollView 
         contentContainerStyle={styles.scrollContent}
         keyboardShouldPersistTaps="handled"
