@@ -77,7 +77,17 @@ const LoginScreen = () => {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
      <StatusBar backgroundColor="#fff" barStyle="dark-content" />
-        <View style={styles.headerWrapper}>
+       
+      <ScrollView 
+        contentContainerStyle={styles.scrollContent}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
+        
+        <Container>
+          
+          <CenterContent>
+             <View style={styles.headerWrapper}>
              <View style={styles.headerContainer}>
                <Image
                  source={LOGO_IMAGE}
@@ -93,13 +103,6 @@ const LoginScreen = () => {
                </View>
              </View>
            </View>
-      <ScrollView 
-        contentContainerStyle={styles.scrollContent}
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}
-      >
-        <Container>
-          <CenterContent>
             <Animated.View entering={FadeIn.duration(600)} style={styles.animatedContainer}>
               <LogoContainer>
                 <LogoText>Welcome Back</LogoText>
@@ -220,6 +223,7 @@ const styles = StyleSheet.create({
     paddingTop: 12,
     paddingBottom: 8,
     backgroundColor: '#ffffff',
+    marginBottom: 25,
   },
   headerContainer: {
     flexDirection: 'row',
@@ -228,8 +232,8 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     justifyContent: 'center',
     textAlign: 'center',
-    // borderBottomColor: '#4a6ea5ff',
-    // borderBottomWidth: 0.40,
+    borderBottomColor: '#4a6ea5ff',
+    borderBottomWidth: 0.40,
   },
   logoImage: {
     width: 68,
