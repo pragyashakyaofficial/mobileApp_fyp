@@ -8,6 +8,7 @@ import BottomTabNavigator from './BottomTabNavigator';
 import LoginScreen from '@features/auth/LoginScreen';
 import RegisterScreen from '@features/auth/RegisterScreen';
 import ProfileScreen from '@features/profile/ProfileScreen';
+import AddSkillsScreen from '@features/profile/AddSkillsScreen';
 import JobListScreen from '@features/jobs/JobListScreen';
 import { RootState } from '@app/store';
 import { useLocationTracking } from '@hooks/useLocationTracking';
@@ -28,6 +29,7 @@ const MainNavigator = () => {
           <Stack.Screen name="JobDetails" component={JobDetailsScreen} />
           <Stack.Screen name="JobCompletion" component={JobCompletionScreen} />
           <Stack.Screen name="Profile" component={ProfileScreen} />
+          <Stack.Screen name="AddSkills" component={AddSkillsScreen} />
           <Stack.Screen name="JobList" component={JobListScreen} />
         </Stack.Group>
       ) : (

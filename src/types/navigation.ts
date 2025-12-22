@@ -6,4 +6,5 @@ export type RootStackParamList = {
   Register: undefined;
   Profile: undefined;
   JobList: { filter?: 'Pending' | 'Completed' };
+  AddSkills: undefined;
 };
