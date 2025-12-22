@@ -8,8 +8,16 @@ export const jobApiSlice = apiSlice.injectEndpoints({
       providesTags: (result, error, id) => [{ type: 'Job', id }],
     }),
     listJobs: builder.query<PaginatedResponse<Job>, void>({
-        query: () => '/jobs',
-        providesTags: (result) => {
+        query: () => '/worker/jobs',
+        async onQueryStarted(arg, { queryFulfilled }) {
+        try {
+          const result = await queryFulfilled;
+          console.log('✅ listJobs successful:', result);
+        } catch (error) {
+          console.error('❌ listJobs failed:', error);
+        }
+      },
+      providesTags: (result) => {
         const jobs = result?.data || [];
         return jobs
             ? [...jobs.map(({ id }) => ({ type: 'Job' as const, id })), { type: 'Job', id: 'LIST' }]
