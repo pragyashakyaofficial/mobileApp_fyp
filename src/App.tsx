@@ -2,21 +2,17 @@ import React from 'react';
 import { Provider as StoreProvider } from 'react-redux';
 import { Provider as PaperProvider } from 'react-native-paper';
 import { NavigationContainer } from '@react-navigation/native';
-import { ThemeProvider } from 'styled-components/native';
 import { store } from '@app/store';
 import MainNavigator from '@navigation/MainNavigator';
-import { theme } from '@constants/theme';
 
 const App = () => {
   return (
     <StoreProvider store={store}>
-      <ThemeProvider theme={theme}>
-        <PaperProvider theme={theme}>
-          <NavigationContainer>
-            <MainNavigator />
-          </NavigationContainer>
-        </PaperProvider>
-      </ThemeProvider>
+      <PaperProvider>
+        <NavigationContainer>
+          <MainNavigator />
+        </NavigationContainer>
+      </PaperProvider>
     </StoreProvider>
   );
 };
