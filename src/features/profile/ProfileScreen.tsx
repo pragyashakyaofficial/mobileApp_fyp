@@ -111,30 +111,6 @@ const ProfileScreen = () => {
           </Card.Content>
         </Card>
 
-        {/* <Card style={[styles.card, { backgroundColor: theme.colors.onPrimary }]}>
-          <Card.Content>
-            <Title style={styles.sectionTitle}>Personal Information</Title>
-            {personalInfo.map((info, index) => (
-              <React.Fragment key={index}>
-                <View style={styles.infoRow}>
-                  <IconButton
-                    icon={info.icon}
-                    size={20}
-                    iconColor={theme.colors.secondary}
-                    style={styles.infoIcon}
-                  />
-                  <View style={styles.infoContent}>
-                    <Text style={styles.infoLabel}>{info.title}</Text>
-                    <Text style={styles.infoValue}>{info.value}</Text>
-                  </View>
-                </View>
-                {index < personalInfo.length - 1 && <Divider style={styles.divider} />}
-              </React.Fragment>
-            ))}
-          </Card.Content>
-        </Card> */}
-
-
         <Card style={[styles.statsCard, { backgroundColor: theme.colors.onPrimary }]}>
           <Card.Content>
             <Title style={styles.sectionTitle}>Job Statistics</Title>
@@ -169,9 +145,43 @@ const ProfileScreen = () => {
             ))}
           </Card.Content>
         </Card>
-        
 
+         <Card style={[styles.card, { backgroundColor: theme.colors.onPrimary }]}>
+          <Card.Content>
+            <List.Item
+              title="Add Skills & Expertise"
+              description="Add or update your skills"
+              left={props => <List.Icon {...props} icon="plus-circle-outline" color={theme.colors.primary} />}
+              right={props => <List.Icon {...props} icon="chevron-right" />}
+              onPress={handleAddSkills}
+              style={styles.listItem}
+              titleStyle={styles.listItemTitle}
+            />
+          </Card.Content>
+        </Card>
 
+        {/* <Card style={[styles.card, { backgroundColor: theme.colors.onPrimary }]}>
+          <Card.Content>
+            <Title style={styles.sectionTitle}>Personal Information</Title>
+            {personalInfo.map((info, index) => (
+              <React.Fragment key={index}>
+                <View style={styles.infoRow}>
+                  <IconButton
+                    icon={info.icon}
+                    size={20}
+                    iconColor={theme.colors.secondary}
+                    style={styles.infoIcon}
+                  />
+                  <View style={styles.infoContent}>
+                    <Text style={styles.infoLabel}>{info.title}</Text>
+                    <Text style={styles.infoValue}>{info.value}</Text>
+                  </View>
+                </View>
+                {index < personalInfo.length - 1 && <Divider style={styles.divider} />}
+              </React.Fragment>
+            ))}
+          </Card.Content>
+        </Card> */}
 
         <Card style={[styles.card, { backgroundColor: theme.colors.onPrimary }]}>
           <Card.Content>
@@ -208,7 +218,7 @@ const ProfileScreen = () => {
           </Card.Content>
         </Card>
 
-      
+       
       </ScrollView>
     </Container>
   );
