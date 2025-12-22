@@ -35,6 +35,7 @@ export interface Job {
   location: {
     latitude: number;
     longitude: number;
+    address: string;
   };
   materials: string[];
   images: string[];

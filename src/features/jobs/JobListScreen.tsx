@@ -1,71 +1,101 @@
-import React from 'react';
-import { FlatList } from 'react-native';
-import { Searchbar } from 'react-native-paper';
+import React, { useState, useMemo } from 'react';
+import { FlatList, View, StyleSheet, ActivityIndicator } from 'react-native';
+import { Text, SegmentedButtons, useTheme, MD3Theme } from 'react-native-paper';
+import { useRoute, RouteProp } from '@react-navigation/native';
 import styled from 'styled-components/native';
-import { ActivityIndicator, Text } from 'react-native';
+
 import JobCard from './components/JobCard';
 import { useListJobsQuery } from './jobApiSlice';
-import { useRoute, RouteProp } from '@react-navigation/native';
 import { RootStackParamList } from '../../types/navigation';
-import { Job } from '@types';
 
 type JobListScreenRouteProp = RouteProp<RootStackParamList, 'JobList'>;
 
 const JobListScreen = () => {
+  const theme = useTheme();
+  const themedStyles = styles(theme);
   const route = useRoute<JobListScreenRouteProp>();
-  const filter = route.params?.filter;
-  const [searchQuery, setSearchQuery] = React.useState('');
+  const initialFilter = route.params?.filter || 'Pending';
+
+  const [selectedSegment, setSelectedSegment] = useState<'Pending' | 'Completed'>(initialFilter);
   const { data: jobsResponse, isLoading, isError, error } = useListJobsQuery();
 
-  const onChangeSearch = (query: string) => setSearchQuery(query);
-
-  const filteredJobs = React.useMemo(() => {
+  const filteredJobs = useMemo(() => {
     const jobs = jobsResponse?.data || [];
-    if (!jobs) return [];
-
-    let jobsToDisplay = jobs;
-
-    if (filter) {
-      jobsToDisplay = jobsToDisplay.filter(job => job.status === filter);
-    }
-
-    if (searchQuery) {
-      jobsToDisplay = jobsToDisplay.filter(job =>
-        job.title.toLowerCase().includes(searchQuery.toLowerCase())
-      );
-    }
-
-    return jobsToDisplay;
-  }, [jobsResponse, filter, searchQuery]);
+    return jobs.filter(job => job.status === selectedSegment);
+  }, [jobsResponse, selectedSegment]);
 
   if (isLoading) {
-    return <Container><ActivityIndicator animating={true} /></Container>;
+    return <CenteredContainer><ActivityIndicator animating={true} size="large" /></CenteredContainer>;
   }
 
   if (isError) {
-    return <Container><Text>Error fetching jobs: {JSON.stringify(error)}</Text></Container>;
+    return <CenteredContainer><Text>Error fetching jobs.</Text></CenteredContainer>;
   }
 
   return (
     <Container>
-      <Searchbar
-        placeholder="Search Jobs"
-        onChangeText={onChangeSearch}
-        value={searchQuery}
-      />
-      {/* TODO: Add filter options and implement search */}
-      <FlatList
-        data={filteredJobs}
-        keyExtractor={item => item.id.toString()}
-        renderItem={({ item }) => <JobCard job={item} />}
-      />
+      <View style={themedStyles.viewcontainer}>
+        <SegmentedButtons
+          value={selectedSegment}
+          onValueChange={(value) => setSelectedSegment(value as 'Pending' | 'Completed')}
+          buttons={[
+            {
+              value: 'Pending',
+              label: 'Pending',
+              style: {
+                backgroundColor: selectedSegment === 'Pending' ? theme.colors.secondary : theme.colors.surface,
+              },
+              labelStyle: {
+                color: selectedSegment === 'Pending' ? theme.colors.onSecondary : theme.colors.onSurface,
+              },
+            },
+            {
+              value: 'Completed',
+              label: 'Completed',
+              style: {
+                backgroundColor: selectedSegment === 'Completed' ? theme.colors.secondary : theme.colors.surface,
+              },
+              labelStyle: {
+                color: selectedSegment === 'Completed' ? theme.colors.onSecondary : theme.colors.onSurface,
+              },
+            },
+          ]}
+          style={themedStyles.segmentedButtons}
+        />
+
+        <FlatList
+          data={filteredJobs}
+          renderItem={({ item }) => <JobCard job={item} selectedStatus={selectedSegment} />}
+          keyExtractor={(item) => item.id.toString()}
+          contentContainerStyle={themedStyles.list}
+        />
+      </View>
     </Container>
   );
 };
 
+const styles = (theme: MD3Theme) => StyleSheet.create({
+  viewcontainer: {
+    padding: 20,
+    flex: 1,
+  },
+  segmentedButtons: {
+    marginBottom: 20,
+  },
+  list: {
+    paddingBottom: 20,
+  },
+});
+
 const Container = styled.View`
   flex: 1;
-  padding: ${({ theme }) => theme.spacing.base}px;
+  background-color: ${({ theme }) => theme.colors.background};
+`;
+
+const CenteredContainer = styled.View`
+  flex: 1;
+  justify-content: center;
+  align-items: center;
   background-color: ${({ theme }) => theme.colors.background};
 `;
 

@@ -14,10 +14,10 @@ const BottomTabNavigator = () => {
         name="DashboardTab"
         component={DashboardScreen}
         options={{
-          // tabBarLabel: 'Dashboard',
-          // tabBarIcon: ({ color, size }) => (
-          //   <MaterialCommunityIcons name="view-dashboard" color={color} size={size} />
-          // ),
+          tabBarLabel: 'Dashboard',
+          tabBarIcon: ({ color, size }) => (
+            <MaterialCommunityIcons name="view-dashboard" color={color} size={size} />
+          ),
           headerShown: false,
         }}
       />
@@ -29,6 +29,7 @@ const BottomTabNavigator = () => {
           tabBarIcon: ({ color, size }) => (
             <MaterialCommunityIcons name="briefcase" color={color} size={size} />
           ),
+            headerShown: false,
         }}
       />
       <Tab.Screen
@@ -39,7 +40,9 @@ const BottomTabNavigator = () => {
           tabBarIcon: ({ color, size }) => (
             <MaterialCommunityIcons name="account" color={color} size={size} />
           ),
+          headerShown: false,
         }}
+
       />
     </Tab.Navigator>
   );
