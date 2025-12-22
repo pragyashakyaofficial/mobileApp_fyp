@@ -1,10 +1,11 @@
 import React from 'react';
-import { View, Text } from 'react-native';
+import JobList from './JobList';
+import { Job } from '@types';
 
-const UpcomingJobs = () => (
-  <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-    <Text>Upcoming Jobs</Text>
-  </View>
-);
+interface UpcomingJobsProps {
+  jobs: Job[];
+}
+
+const UpcomingJobs: React.FC<UpcomingJobsProps> = ({ jobs }) => <JobList jobs={jobs} />;
 
 export default UpcomingJobs;

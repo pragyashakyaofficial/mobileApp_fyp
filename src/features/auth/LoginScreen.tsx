@@ -1,113 +1,317 @@
-import React from 'react';
-import { View, StyleSheet } from 'react-native';
+import React, { useState } from 'react';
+import { StyleSheet, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
 import { Button, Text, TextInput } from 'react-native-paper';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import styled from 'styled-components/native';
 import { useLoginMutation } from './authApiSlice';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { RootStackParamList } from '../../types/navigation';
+import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 
+// Enhanced validation schema
 const FormSchema = z.object({
-  email: z.string().email('Invalid email address'),
-  password: z.string().min(6, 'Password must be at least 6 characters'),
+  email: z
+    .string()
+    .min(1, 'Email is required')
+    .email('Please enter a valid email address')
+    .trim()
+    .toLowerCase(),
+  password: z
+    .string()
+    .min(1, 'Password is required')
+    .min(6, 'Password must be at least 6 characters'),
 });
 
 type FormData = z.infer<typeof FormSchema>;
 
 const LoginScreen = () => {
-  const { control, handleSubmit, formState: { errors } } = useForm<FormData>({
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const [showPassword, setShowPassword] = useState(false);
+  const [serverError, setServerError] = useState<string | null>(null);
+
+  const { 
+    control, 
+    handleSubmit, 
+    formState: { errors, isValid, isDirty } 
+  } = useForm<FormData>({
     resolver: zodResolver(FormSchema),
+    mode: 'onChange',
+    defaultValues: {
+      email: '',
+      password: '',
+    },
   });
 
   const [login, { isLoading }] = useLoginMutation();
 
   const onSubmit = async (data: FormData) => {
+    setServerError(null);
     try {
       await login(data).unwrap();
-    } catch (err) {
+      // Login successful - navigation will be handled by auth state change
+    } catch (err: any) {
       console.error('Failed to login: ', err);
-      // TODO: Show error message to user
+      
+      // Handle different error types
+      if (err.status === 401) {
+        setServerError('Invalid email or password');
+      } else if (err.status === 429) {
+        setServerError('Too many attempts. Please try again later.');
+      } else if (err.status === 500) {
+        setServerError('Server error. Please try again later.');
+      } else if (err.data?.message) {
+        setServerError(err.data.message);
+      } else {
+        setServerError('Network error. Please check your connection.');
+      }
     }
   };
 
   return (
-    <Container>
-      <Title>Login</Title>
-      <Controller
-        control={control}
-        name="email"
-        render={({ field: { onChange, onBlur, value } }) => (
-          <StyledInput
-            label="Email"
-            onBlur={onBlur}
-            onChangeText={onChange}
-            value={value}
-            error={!!errors.email}
-            autoCapitalize="none"
-          />
-        )}
-      />
-      {errors.email && <ErrorText>{errors.email.message}</ErrorText>}
+    <KeyboardAvoidingView
+      style={styles.keyboardAvoid}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+    >
+      <ScrollView 
+        contentContainerStyle={styles.scrollContent}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
+        <Container>
+          <CenterContent>
+            <Animated.View entering={FadeIn.duration(600)} style={styles.animatedContainer}>
+              <LogoContainer>
+                <LogoText>Welcome Back</LogoText>
+                <LogoSubText>Sign in to continue</LogoSubText>
+              </LogoContainer>
 
-      <Controller
-        control={control}
-        name="password"
-        render={({ field: { onChange, onBlur, value } }) => (
-          <StyledInput
-            label="Password"
-            onBlur={onBlur}
-            onChangeText={onChange}
-            value={value}
-            error={!!errors.password}
-            secureTextEntry
-          />
-        )}
-      />
-      {errors.password && <ErrorText>{errors.password.message}</ErrorText>}
+              <FormContainer>
+                {serverError && (
+                  <Animated.View entering={FadeInDown.duration(300)}>
+                    <ServerErrorContainer>
+                      <ServerErrorText>{serverError}</ServerErrorText>
+                    </ServerErrorContainer>
+                  </Animated.View>
+                )}
 
-      <StyledButton mode="contained" onPress={handleSubmit(onSubmit)} loading={isLoading} disabled={isLoading}>
-        Login
-      </StyledButton>
+                <Controller
+                  control={control}
+                  name="email"
+                  render={({ field: { onChange, onBlur, value } }) => (
+                    <InputContainer>
+                      <StyledInput
+                        label="Email"
+                        onBlur={onBlur}
+                        onChangeText={(text) => {
+                          onChange(text);
+                          setServerError(null);
+                        }}
+                        value={value}
+                        error={!!errors.email}
+                        autoCapitalize="none"
+                        keyboardType="email-address"
+                        autoComplete="email"
+                        left={<TextInput.Icon icon="email" size={20} />}
+                        mode="outlined"
+                        outlineColor="#e0e0e0"
+                        activeOutlineColor="#6200ee"
+                        style={styles.input}
+                      />
+                      {errors.email && (
+                        <Animated.View entering={FadeInDown.duration(200)}>
+                          <ErrorText>{errors.email.message}</ErrorText>
+                        </Animated.View>
+                      )}
+                    </InputContainer>
+                  )}
+                />
 
-      <ForgotPassword>
-        Forgot Password?
-      </ForgotPassword>
-    </Container>
+                <Controller
+                  control={control}
+                  name="password"
+                  render={({ field: { onChange, onBlur, value } }) => (
+                    <InputContainer>
+                      <StyledInput
+                        label="Password"
+                        onBlur={onBlur}
+                        onChangeText={(text) => {
+                          onChange(text);
+                          setServerError(null);
+                        }}
+                        value={value}
+                        error={!!errors.password}
+                        secureTextEntry={!showPassword}
+                        autoComplete="password"
+                        left={<TextInput.Icon icon="lock" size={20} />}
+                        right={
+                          <TextInput.Icon
+                            icon={showPassword ? "eye-off" : "eye"}
+                            onPress={() => setShowPassword(!showPassword)}
+                          />
+                        }
+                        mode="outlined"
+                        outlineColor="#e0e0e0"
+                        activeOutlineColor="#6200ee"
+                        style={styles.input}
+                      />
+                      {errors.password && (
+                        <Animated.View entering={FadeInDown.duration(200)}>
+                          <ErrorText>{errors.password.message}</ErrorText>
+                        </Animated.View>
+                      )}
+                    </InputContainer>
+                  )}
+                />
+
+                <StyledButton
+                  mode="contained"
+                  onPress={handleSubmit(onSubmit)}
+                  loading={isLoading}
+                  disabled={isLoading || !isValid || !isDirty}
+                  style={styles.button}
+                  labelStyle={styles.buttonLabel}
+                >
+                  {isLoading ? 'Signing In...' : 'Sign In'}
+                </StyledButton>
+
+                <TermsContainer>
+                  <TermsText>
+                    By signing in, you agree to our{' '}
+                    <TermsLink>Terms of Service</TermsLink> and{' '}
+                    <TermsLink>Privacy Policy</TermsLink>
+                  </TermsText>
+                </TermsContainer>
+              </FormContainer>
+            </Animated.View>
+          </CenterContent>
+        </Container>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 };
 
+const styles = StyleSheet.create({
+  keyboardAvoid: {
+    flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
+  },
+  input: {
+    backgroundColor: 'white',
+  },
+  button: {
+    borderRadius: 8,
+    paddingVertical: 10,
+    marginTop: 8,
+  },
+  buttonLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    paddingVertical: 4,
+  },
+  animatedContainer: {
+    width: '100%',
+  },
+});
+
 const Container = styled.View`
   flex: 1;
-  justify-content: center;
-  padding: ${({ theme }) => theme.spacing.base * 2}px;
-  background-color: ${({ theme }) => theme.colors.background};
+  background-color: #f8f9fa;
+  min-height: 100%;
 `;
 
-const Title = styled(Text)`
-  font-size: 24px;
+const CenterContent = styled.View`
+  flex: 1;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  min-height: 100%;
+`;
+
+const LogoContainer = styled.View`
+  align-items: center;
+  margin-bottom: 40px;
+`;
+
+const LogoText = styled(Text)`
+  font-size: 32px;
   font-weight: bold;
-  text-align: center;
-  margin-bottom: ${({ theme }) => theme.spacing.base * 3}px;
-  color: ${({ theme }) => theme.colors.primary};
+  color: #2c3e50;
+  margin-bottom: 8px;
+`;
+
+const LogoSubText = styled(Text)`
+  font-size: 16px;
+  color: #7f8c8d;
+`;
+
+const FormContainer = styled.View`
+  background-color: white;
+  padding: 32px 24px;
+  border-radius: 20px;
+  width: 100%;
+  max-width: 400px;
+  border-width: 1px;
+  border-color: #e0e0e0;
+`;
+
+const InputContainer = styled.View`
+  margin-bottom: 20px;
+  width: 100%;
 `;
 
 const StyledInput = styled(TextInput)`
-  margin-bottom: ${({ theme }) => theme.spacing.base * 2}px;
-`;
-
-const StyledButton = styled(Button)`
-  margin-top: ${({ theme }) => theme.spacing.base * 2}px;
+  background-color: white;
 `;
 
 const ErrorText = styled(Text)`
-  color: ${({ theme }) => theme.colors.error};
-  margin-bottom: ${({ theme }) => theme.spacing.base}px;
+  color: #e74c3c;
+  font-size: 12px;
+  margin-top: 4px;
+  margin-left: 4px;
 `;
 
-const ForgotPassword = styled(Text)`
+const ServerErrorContainer = styled.View`
+  background-color: #ffeaea;
+  padding: 12px;
+  border-radius: 8px;
+  border-left-width: 4px;
+  border-left-color: #e74c3c;
+  margin-bottom: 20px;
+`;
+
+const ServerErrorText = styled(Text)`
+  color: #c0392b;
+  font-size: 14px;
   text-align: center;
-  margin-top: ${({ theme }) => theme.spacing.base * 2}px;
-  color: ${({ theme }) => theme.colors.primary};
+`;
+
+const StyledButton = styled(Button)`
+  border-radius: 8px;
+  width: 100%;
+`;
+
+const TermsContainer = styled.View`
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top-width: 1px;
+  border-top-color: #e0e0e0;
+`;
+
+const TermsText = styled(Text)`
+  color: #95a5a6;
+  font-size: 12px;
+  text-align: center;
+  line-height: 16px;
+`;
+
+const TermsLink = styled(Text)`
+  color: #6200ee;
+  font-weight: 500;
 `;
 
 export default LoginScreen;

@@ -1,10 +1,11 @@
 import React from 'react';
-import { View, Text } from 'react-native';
+import JobList from './JobList';
+import { Job } from '@types';
 
-const TodaysJobs = () => (
-  <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-    <Text>Today's Jobs</Text>
-  </View>
-);
+interface TodaysJobsProps {
+  jobs: Job[];
+}
+
+const TodaysJobs: React.FC<TodaysJobsProps> = ({ jobs }) => <JobList jobs={jobs} />;
 
 export default TodaysJobs;

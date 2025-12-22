@@ -1,14 +1,16 @@
 import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { RootStackParamList } from '../types/navigation';
 import { useSelector } from 'react-redux';
 import JobDetailsScreen from '@features/jobs/JobDetailsScreen';
 import JobCompletionScreen from '@features/jobs/JobCompletionScreen';
 import BottomTabNavigator from './BottomTabNavigator';
 import LoginScreen from '@features/auth/LoginScreen';
+import RegisterScreen from '@features/auth/RegisterScreen';
 import { RootState } from '@app/store';
 import { useLocationTracking } from '@hooks/useLocationTracking';
 
-const Stack = createNativeStackNavigator();
+const Stack = createNativeStackNavigator<RootStackParamList>();
 
 const MainNavigator = () => {
   const { isAuthenticated } = useSelector((state: RootState) => state.auth);
@@ -25,7 +27,10 @@ const MainNavigator = () => {
           <Stack.Screen name="JobCompletion" component={JobCompletionScreen} />
         </Stack.Group>
       ) : (
-        <Stack.Screen name="Login" component={LoginScreen} />
+        <Stack.Group>
+          <Stack.Screen name="Login" component={LoginScreen} />
+          <Stack.Screen name="Register" component={RegisterScreen} />
+        </Stack.Group>
       )}
     </Stack.Navigator>
   );

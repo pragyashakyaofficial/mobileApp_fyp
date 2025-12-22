@@ -2,41 +2,23 @@ import React from 'react';
 import { FlatList } from 'react-native';
 import { Searchbar } from 'react-native-paper';
 import styled from 'styled-components/native';
+import { ActivityIndicator, Text } from 'react-native';
 import JobCard from './components/JobCard';
-import { Job } from '@types';
-
-// Placeholder data
-const jobs: Job[] = [
-  {
-    id: '1',
-    title: 'Living Room Redesign',
-    client: 'John Doe',
-    priority: 'High',
-    status: 'In Progress',
-    distance: '5km',
-    time: '10:00 AM',
-    location: { latitude: 37.78825, longitude: -122.4324 },
-    materials: ['Paint', 'Brushes', 'Wallpaper'],
-    images: ['https://images.unsplash.com/photo-1586023492125-27b2c045efd7'],
-  },
-  {
-    id: '2',
-    title: 'Kitchen Remodel',
-    client: 'Jane Smith',
-    priority: 'Medium',
-    status: 'Pending',
-    distance: '12km',
-    time: '2:00 PM',
-    location: { latitude: 37.78825, longitude: -122.4324 },
-    materials: ['Tiles', 'Grout', 'Sink'],
-    images: ['https://images.unsplash.com/photo-1567016432779-170799a98343'],
-  },
-];
+import { useListJobsQuery } from './jobApiSlice';
 
 const JobListScreen = () => {
   const [searchQuery, setSearchQuery] = React.useState('');
+  const { data: jobs, isLoading, isError, error } = useListJobsQuery();
 
   const onChangeSearch = (query: string) => setSearchQuery(query);
+
+  if (isLoading) {
+    return <Container><ActivityIndicator animating={true} /></Container>;
+  }
+
+  if (isError) {
+    return <Container><Text>Error fetching jobs: {JSON.stringify(error)}</Text></Container>;
+  }
 
   return (
     <Container>
@@ -45,10 +27,10 @@ const JobListScreen = () => {
         onChangeText={onChangeSearch}
         value={searchQuery}
       />
-      {/* TODO: Add filter options */}
+      {/* TODO: Add filter options and implement search */}
       <FlatList
         data={jobs}
-        keyExtractor={item => item.id}
+        keyExtractor={item => item.id.toString()}
         renderItem={({ item }) => <JobCard job={item} />}
       />
     </Container>

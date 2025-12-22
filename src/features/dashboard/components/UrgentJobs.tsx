@@ -1,10 +1,11 @@
 import React from 'react';
-import { View, Text } from 'react-native';
+import JobList from './JobList';
+import { Job } from '@types';
 
-const UrgentJobs = () => (
-  <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-    <Text>Urgent Jobs</Text>
-  </View>
-);
+interface UrgentJobsProps {
+  jobs: Job[];
+}
+
+const UrgentJobs: React.FC<UrgentJobsProps> = ({ jobs }) => <JobList jobs={jobs} />;
 
 export default UrgentJobs;

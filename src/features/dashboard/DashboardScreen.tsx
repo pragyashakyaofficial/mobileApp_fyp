@@ -1,20 +1,17 @@
 import React from 'react';
-import { View, useWindowDimensions } from 'react-native';
+import { View, useWindowDimensions, ActivityIndicator } from 'react-native';
 import { Avatar, Card, Title, Paragraph, Text } from 'react-native-paper';
-import { TabView, SceneMap } from 'react-native-tab-view';
+import { TabView } from 'react-native-tab-view';
 import styled from 'styled-components/native';
 import UrgentJobs from './components/UrgentJobs';
 import TodaysJobs from './components/TodaysJobs';
 import UpcomingJobs from './components/UpcomingJobs';
-
-const renderScene = SceneMap({
-  urgent: UrgentJobs,
-  today: TodaysJobs,
-  upcoming: UpcomingJobs,
-});
+import { useGetMyJobsQuery } from '@features/worker/workerApiSlice';
+import { Job } from '@types';
 
 const DashboardScreen = () => {
   const layout = useWindowDimensions();
+  const { data: jobs, isLoading, isError, error } = useGetMyJobsQuery();
 
   const [index, setIndex] = React.useState(0);
   const [routes] = React.useState([
@@ -22,6 +19,32 @@ const DashboardScreen = () => {
     { key: 'today', title: 'Today' },
     { key: 'upcoming', title: 'Upcoming' },
   ]);
+
+  if (isLoading) {
+    return <CenteredContainer><ActivityIndicator animating={true} /></CenteredContainer>;
+  }
+
+  if (isError) {
+    return <CenteredContainer><Text>Error fetching jobs: {JSON.stringify(error)}</Text></CenteredContainer>;
+  }
+
+  const urgentJobs = jobs?.filter(job => job.priority === 'High') || [];
+  const todaysJobs = jobs || []; // Assuming all jobs are for today
+  const upcomingJobs: Job[] = []; // No upcoming jobs data available
+
+  const renderScene = ({ route }: { route: { key: string } }) => {
+    switch (route.key) {
+      case 'urgent':
+        return <UrgentJobs jobs={urgentJobs} />;
+      case 'today':
+        return <TodaysJobs jobs={todaysJobs} />;
+      case 'upcoming':
+        return <UpcomingJobs jobs={upcomingJobs} />;
+      default:
+        return null;
+    }
+  };
+
   return (
     <Container>
       <Header>
@@ -35,25 +58,25 @@ const DashboardScreen = () => {
       <StatsContainer>
         <StatCard>
           <Card.Content>
-            <Title>12</Title>
+            <Title>{jobs?.length || 0}</Title>
             <Paragraph>Total Jobs</Paragraph>
           </Card.Content>
         </StatCard>
         <StatCard>
           <Card.Content>
-            <Title>5</Title>
+            <Title>{jobs?.filter(j => j.status === 'In Progress').length || 0}</Title>
             <Paragraph>In Progress</Paragraph>
           </Card.Content>
         </StatCard>
         <StatCard>
           <Card.Content>
-            <Title>7</Title>
+            <Title>{jobs?.filter(j => j.status === 'Completed').length || 0}</Title>
             <Paragraph>Completed</Paragraph>
           </Card.Content>
         </StatCard>
         <StatCard>
           <Card.Content>
-            <Title>2</Title>
+            <Title>{urgentJobs.length}</Title>
             <Paragraph>Urgent</Paragraph>
           </Card.Content>
         </StatCard>
@@ -63,38 +86,44 @@ const DashboardScreen = () => {
         navigationState={{ index, routes }}
         renderScene={renderScene}
         onIndexChange={setIndex}
-        initialLayout={{ width: 360 }}
+        initialLayout={{ width: layout.width }}
       />
     </Container>
   );
 };
 
+const CenteredContainer = styled.View`
+  flex: 1;
+  justify-content: center;
+  align-items: center;
+`;
+
 const Container = styled.ScrollView`
   flex: 1;
-  padding: ${({ theme }) => theme.spacing.base * 2}px;
-  background-color: ${({ theme }) => theme.colors.background};
+  padding: 16px;
+  background-color: #fff;
 `;
 
 const Header = styled.View`
   flex-direction: row;
   align-items: center;
-  margin-bottom: ${({ theme }) => theme.spacing.base * 3}px;
+  margin-bottom: 24px;
 `;
 
 const UserInfo = styled.View`
-  margin-left: ${({ theme }) => theme.spacing.base * 2}px;
+  margin-left: 16px;
 `;
 
 const StatsContainer = styled.View`
   flex-direction: row;
   flex-wrap: wrap;
   justify-content: space-between;
-  margin-bottom: ${({ theme }) => theme.spacing.base * 3}px;
+  margin-bottom: 24px;
 `;
 
 const StatCard = styled(Card)`
   width: 48%;
-  margin-bottom: ${({ theme }) => theme.spacing.base * 2}px;
+  margin-bottom: 16px;
 `;
 
 export default DashboardScreen;
