@@ -35,9 +35,27 @@ const JobListScreen = () => {
     <Container>
       <View style={themedStyles.viewcontainer}>
         <StatusBar backgroundColor="#ffffff" barStyle="dark-content" />
-         <View style={themedStyles.headerContainer}>
+         {/* <View style={themedStyles.headerContainer}>
                 <Image source={LOGO_IMAGE} style={themedStyles.logoImage} resizeMode="contain" />
-              </View>
+                <Text style={themedStyles.headerText}> Design Ease</Text>
+              </View> */}
+              <View style={themedStyles.headerWrapper}>
+  <View style={themedStyles.headerContainer}>
+    <Image
+      source={LOGO_IMAGE}
+      style={themedStyles.logoImage}
+      resizeMode="contain"
+    />
+
+    <View>
+      <Text style={themedStyles.headerText}>Design Ease</Text>
+      <Text style={themedStyles.subHeaderText}>
+        Interior Work Manager
+      </Text>
+    </View>
+  </View>
+</View>
+
         <SegmentedButtons
           value={selectedSegment}
           onValueChange={(value) => setSelectedSegment(value as 'Pending' | 'Completed')}
@@ -83,14 +101,43 @@ const styles = (theme: MD3Theme) => StyleSheet.create({
     // padding: 20,
     flex: 1,
   },
-   headerContainer: {
-    alignItems: 'center',
-    // marginVertical: 10,
-  },
-  logoImage: {
-    width: 200,
-    height: 100,
-  },
+   headerWrapper: {
+      paddingHorizontal: 16,
+      paddingTop: 12,
+      paddingBottom: 8,
+      backgroundColor: '#ffffff',
+    },
+
+    headerContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      padding: 12,
+      borderRadius: 16,
+      justifyContent: 'center',
+      textAlign: 'center',
+      // borderLeftColor: '#4A6FA5',
+      // borderRightColor: '#4A6FA5',
+      // borderTopColor: '#4A6FA5',
+      borderBottomColor: '#4a6ea5ff',
+      borderBottomWidth: 0.40,
+    },
+    logoImage: {
+      width: 48,
+      height: 48,
+      marginRight: 12,
+    },
+
+    headerText: {
+      fontSize: 20,
+      fontWeight: '700',
+      color: theme.colors.primary, // #4A6FA5
+    },
+
+   subHeaderText: {
+      fontSize: 11,
+      color: '#FF9500',
+      marginTop: 2,
+    },
   segmentedButtons: {
     marginTop: 20,
     marginBottom: 20,

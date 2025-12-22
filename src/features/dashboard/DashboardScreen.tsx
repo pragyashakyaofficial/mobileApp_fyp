@@ -1,17 +1,21 @@
 import React, { useEffect, useState } from 'react';
 import { ScrollView, View, StyleSheet, Dimensions, Pressable, ActivityIndicator, StatusBar, Image } from 'react-native';
 import { Text, Card, IconButton, useTheme, Divider, Button, Surface, MD3Theme } from 'react-native-paper';
-import { useNavigation, NavigationProp } from '@react-navigation/native';
+import { useNavigation, NavigationProp, CommonActions } from '@react-navigation/native';
 import styled from 'styled-components/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { useGetMyJobsQuery } from '@features/worker/workerApiSlice';
 import { LOGO_IMAGE } from '@assets/images';
 import { User } from '@types';
+import { updateJobsTabParams } from '@navigation/BottomTabNavigator';
+
+
 
 type RootStackParamList = {
   Profile: undefined;
   JobList: { filter: 'Pending' | 'Completed' };
+  JobsTab: { filter: 'Pending' | 'Completed' };
 };
 
 const { width } = Dimensions.get('window');
@@ -23,6 +27,8 @@ const DashboardScreen = () => {
   const { data: jobs, isLoading: isLoadingJobs, isError, error } = useGetMyJobsQuery();
   const [user, setUser] = useState<User | null>(null);
   const [isLoadingUser, setIsLoadingUser] = useState(true);
+
+  
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -57,25 +63,45 @@ const DashboardScreen = () => {
   const urgentJobsCount = jobsData.filter((job) => job.priority === 'High' && job.status === 'Pending').length;
 
   const gotoProfile = () => navigation.navigate('Profile');
-  const gotoPendingJobs = () => navigation.navigate('JobList', { filter: 'Pending' });
-  const gotoCompletedJobs = () => navigation.navigate('JobList', { filter: 'Completed' });
+  const gotoPendingJobs = () => navigation.navigate('JobsTab', { filter: 'Pending' }); // Changed from JobList
+  // const gotoCompletedJobs = () => navigation.navigate('JobsTab', { filter: 'Completed' });
+
+  const gotoCompletedJobs = () => {
+    // navigation.navigate('JobsTab', { filter: 'Completed' });
+    updateJobsTabParams({ filter: 'Completed' }),
+    // Navigate to JobsTab
+    navigation.navigate('JobsTab', { filter: 'Completed' });
+  };
 
   return (
     <ScrollView style={themedStyles.container}>
       <StatusBar backgroundColor="#ffffff" barStyle="dark-content" />
-      <View style={themedStyles.headerContainer}>
-        <Image source={LOGO_IMAGE} style={themedStyles.logoImage} resizeMode="contain" />
-      </View>
+      <View style={themedStyles.headerWrapper}>
+       <View style={themedStyles.headerContainer}>
+         <Image
+           source={LOGO_IMAGE}
+           style={themedStyles.logoImage}
+           resizeMode="contain"
+         />
+     
+         <View>
+           <Text style={themedStyles.headerText}>Design Ease</Text>
+           <Text style={themedStyles.subHeaderText}>
+             Interior Work Manager
+           </Text>
+         </View>
+       </View>
+     </View>
 
       <View style={themedStyles.viewcard}>
         <Card style={themedStyles.card} onPress={gotoProfile}>
           <View style={themedStyles.userInfo}>
-            <IconButton icon="account-box" size={60} iconColor={theme.colors.secondary} onPress={gotoProfile} />
+            <IconButton icon="account-box" size={60} iconColor={theme.colors.primary} onPress={gotoProfile} />
             <View style={themedStyles.textContainer}>
               <Text style={themedStyles.userName}>Hello, {user?.name || 'Designer'}!</Text>
               <Text style={themedStyles.userInfoActive}>Active</Text>
-              <Text variant='bodyLarge'>Contact: {user?.contact || 'N/A'}</Text>
-              <Text variant='bodyLarge'>Email: {user?.email || 'N/A'}</Text>
+              <Text variant='bodyLarge' style={[ { color: theme.colors.secondary } ]}>Contact: {user?.contact || 'N/A'}</Text>
+              <Text variant='bodyLarge' style={[ { color: theme.colors.secondary } ]}>Email: {user?.email || 'N/A'}</Text>
             </View>
           </View>
         </Card>
@@ -87,10 +113,10 @@ const DashboardScreen = () => {
           <Text style={themedStyles.statNumber}>{totalJobsCount}</Text>
         </Card>
         <Card style={[themedStyles.statBox, themedStyles.pendingJobs]} onPress={gotoPendingJobs}>
-          <Text style={[themedStyles.statText, { color: theme.colors.onPrimary }]}>Pendings</Text>
-          <Text style={[themedStyles.statNumber, { color: theme.colors.onPrimary }]}>{pendingCount}</Text>
+          <Text style={[themedStyles.statText, { color: theme.colors.accent }]}>Pendings</Text>
+          <Text style={[themedStyles.statNumber, { color: theme.colors.accent }]}>{pendingCount}</Text>
         </Card>
-        <Card style={[themedStyles.statBox, { borderColor: theme.colors.secondary, borderWidth: 0.5 }]}>
+        <Card style={[themedStyles.statBox, { borderColor: theme.colors.secondary, borderWidth: 0.5 }]} onPress={gotoCompletedJobs}>
           <Text style={[themedStyles.statText, { color: theme.colors.secondary, fontWeight: 'bold' }]}>Completed</Text>
           <Text style={[themedStyles.statNumber, { color: theme.colors.secondary }]}>{completedCount}</Text>
         </Card>
@@ -100,27 +126,27 @@ const DashboardScreen = () => {
         <Card style={themedStyles.summarycard}>
           <Text style={themedStyles.cardTitle}>Job Summary:</Text>
           <View style={themedStyles.inlineRow}>
-            <IconButton icon="calendar-multiple-check" size={20} />
+            <IconButton icon="calendar-multiple-check" size={20} iconColor={theme.colors.primary}/>
             <Text style={themedStyles.inlineItem}>{user?.position || 'Designer'} since {user?.joineddate || 'N/A'}</Text>
           </View>
           <Divider />
           <View style={themedStyles.inlineRow}>
-            <IconButton icon="map-marker-radius" size={20} />
+            <IconButton icon="map-marker-radius" size={20} iconColor={theme.colors.primary}/>
             <Text style={themedStyles.inlineItem}>{user?.branch || 'Main Branch'}</Text>
           </View>
           <Divider />
           <View style={themedStyles.inlineRow}>
-            <IconButton icon="format-list-checks" size={20} />
+            <IconButton icon="format-list-checks" size={20} iconColor={theme.colors.primary}/>
             <Text style={themedStyles.inlineItem}>Total Job done: {completedCount}</Text>
             <View style={themedStyles.buttonContainer}>
-              <Button mode="text" onPress={gotoCompletedJobs} labelStyle={{ color: theme.colors.primary }}>
+              {/* <Button mode="text" onPress={gotoCompletedJobs} labelStyle={{ color: theme.colors.primary }}>
                 See details {'>'}
-              </Button>
+              </Button> */}
             </View>
           </View>
-          <Button mode="text" onPress={gotoProfile} style={themedStyles.exploreButton} labelStyle={themedStyles.exploreLabel}>
+          {/* <Button mode="text" onPress={gotoProfile} style={themedStyles.exploreButton} labelStyle={themedStyles.exploreLabel}>
             Manage Profile
-          </Button>
+          </Button> */}
         </Card>
       </View>
 
@@ -131,8 +157,8 @@ const DashboardScreen = () => {
             <View style={themedStyles.urgentBadge}>
               <Text style={themedStyles.urgentBadgeText}>Urgent</Text>
             </View>
-            <Text style={[themedStyles.jobNumber, { color: theme.colors.secondary }]}>{urgentJobsCount}</Text>
-            <Text style={[themedStyles.jobLabel, { color: theme.colors.secondary }]}>Pending Jobs</Text>
+            <Text style={[themedStyles.jobNumber, { color: theme.colors.accent }]}>{urgentJobsCount}</Text>
+            <Text style={[themedStyles.jobLabel, { color: theme.colors.accent }]}>Pending Jobs</Text>
           </Surface>
         </Pressable>
         <Pressable onPress={gotoPendingJobs}>
@@ -149,20 +175,44 @@ const DashboardScreen = () => {
 const styles = (theme: MD3Theme) => StyleSheet.create({
   container: {
     flex: 1,
-    padding: 10,
     backgroundColor: '#fff',
   },
-   headerContainer: {
+  headerWrapper: {
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    paddingBottom: 8,
+    backgroundColor: '#ffffff',
+  },
+  headerContainer: {
+    flexDirection: 'row',
     alignItems: 'center',
-    marginVertical: 10,
+    padding: 12,
+    borderRadius: 16,
+    justifyContent: 'center',
+    textAlign: 'center',
+    borderBottomColor: '#4a6ea5ff',
+    borderBottomWidth: 0.40,
   },
   logoImage: {
-    width: 100,
-    height: 50,
+    width: 48,
+    height: 48,
+    marginRight: 12,
+  },
+  headerText: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: theme.colors.primary,
+  },
+  subHeaderText: {
+    fontSize: 11,
+    color: '#FF9500',
+    marginTop: 2,
   },
   viewcard: {
     padding: 5,
     marginBottom: 10,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
   },
   card: {
     backgroundColor: theme.colors.onPrimary,
@@ -173,12 +223,14 @@ const styles = (theme: MD3Theme) => StyleSheet.create({
     backgroundColor: theme.colors.onPrimary,
     borderRadius: 12,
     padding: 20,
+    paddingHorizontal: 20,
   },
   cardTitle: {
     ...theme.fonts.titleLarge,
-    fontWeight: 'bold',
+    // fontWeight: 'bold',
     marginBottom: 5,
     textAlign: 'center',
+    color: theme.colors.primary,
   },
   userInfo: {
     flexDirection: 'row',
@@ -191,6 +243,7 @@ const styles = (theme: MD3Theme) => StyleSheet.create({
   userName: {
     ...theme.fonts.titleMedium,
     fontWeight: 'bold',
+    color: theme.colors.secondary
   },
   userInfoActive: {
     ...theme.fonts.labelMedium,
@@ -207,6 +260,7 @@ const styles = (theme: MD3Theme) => StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginBottom: 20,
+    paddingHorizontal: 20,
   },
   statBox: {
     flex: 1,
@@ -215,23 +269,32 @@ const styles = (theme: MD3Theme) => StyleSheet.create({
     alignItems: 'center',
     borderRadius: 12,
     backgroundColor: theme.colors.onPrimary,
+    elevation: 0, // Remove shadow on Android
+    shadowColor: 'transparent', // Remove shadow on iOS
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0,
+    shadowRadius: 0,
   },
   outlinecard: {
     borderWidth: 0.5,
     borderColor: theme.colors.primary,
   },
   pendingJobs: {
-    backgroundColor: theme.colors.primary,
+    borderWidth: 0.5,
+    borderColor: theme.colors.accent,
+    // backgroundColor: theme.colors.accent,
   },
   statText: {
     marginBottom: 5,
     textAlign: 'center',
     ...theme.fonts.bodyLarge,
+    color: theme.colors.secondary 
   },
   statNumber: {
     ...theme.fonts.displaySmall,
     textAlign: 'center',
     fontWeight: 'bold',
+    color: theme.colors.secondary
   },
   inlineRow: {
     flexDirection: 'row',
@@ -239,8 +302,8 @@ const styles = (theme: MD3Theme) => StyleSheet.create({
   },
   inlineItem: {
     ...theme.fonts.bodyLarge,
-    fontWeight: 'bold',
-    paddingVertical: 12,
+    paddingVertical: 12, // Removed fontWeight: 'bold'
+    color: theme.colors.secondary 
   },
   buttonContainer: {
     flex: 1,
@@ -269,16 +332,23 @@ const styles = (theme: MD3Theme) => StyleSheet.create({
     borderRadius: 16,
     padding: 16,
     height: 120,
+    elevation: 0, // Remove shadow on Android
+    shadowColor: 'transparent', // Remove shadow on iOS
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0,
+    shadowRadius: 0,
+    borderWidth: 0.15,
+    borderColor: theme.colors.secondary,
   },
   urgentJobCard: {
     borderWidth: 1,
-    borderColor: theme.colors.secondary,
+    borderColor: theme.colors.accent,
   },
   urgentBadge: {
     position: 'absolute',
     top: 0,
     right: 0,
-    backgroundColor: theme.colors.primary,
+    backgroundColor: theme.colors.accent,
     paddingHorizontal: 12,
     paddingVertical: 4,
     borderTopRightRadius: 16,
@@ -292,7 +362,7 @@ const styles = (theme: MD3Theme) => StyleSheet.create({
     ...theme.fonts.displaySmall,
     fontWeight: 'bold',
     textAlign: 'center',
-    color: theme.colors.primary,
+    color: theme.colors.onPrimaryContainer,
     marginBottom: 4,
   },
   regularJobNumber: {
@@ -316,4 +386,3 @@ const CenteredContainer = styled.View`
 `;
 
 export default DashboardScreen;
-

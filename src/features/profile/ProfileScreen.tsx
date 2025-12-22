@@ -57,7 +57,7 @@ const ProfileScreen = () => {
     return (
       <Container>
         <View style={styles.centered}>
-          <Text>Loading profile...</Text>
+          <Text style={{ color: theme.colors.secondary }}>Loading profile...</Text>
         </View>
       </Container>
     );
@@ -83,11 +83,26 @@ const ProfileScreen = () => {
   return (
     <Container>
       <ScrollView showsVerticalScrollIndicator={false}>
+       <View style={styles.headerWrapper}>
         <View style={styles.headerContainer}>
-          <Image source={LOGO_IMAGE} style={styles.logoImage} resizeMode="contain" />
+          <Image
+            source={LOGO_IMAGE}
+            style={styles.logoImage}
+            resizeMode="contain"
+          />
+      
+          <View>
+            <Text style={[styles.headerText, { color: theme.colors.secondary }]}>Design Ease</Text>
+            <Text style={styles.subHeaderText}>
+              Interior Work Manager
+            </Text>
+          </View>
         </View>
+      </View>
 
-        <Card style={[styles.card, { backgroundColor: theme.colors.onPrimary }]}>
+        <Card style={[styles.card, { 
+          backgroundColor: theme.colors.onPrimary, 
+         }]}>
           <Card.Content style={styles.cardContent}>
             <View style={styles.userHeader}>
               <View style={styles.avatarContainer}>
@@ -100,12 +115,13 @@ const ProfileScreen = () => {
                   size={20}
                   onPress={handleAddSkills}
                   style={styles.editButton}
+                  iconColor={theme.colors.primary}
                 />
               </View>
               <View style={styles.userInfo}>
-                <Title style={styles.userName}>{user?.name || 'Designer Name'}</Title>
-                <Paragraph style={styles.userContact}>Contact: {user?.contact || 'N/A'}</Paragraph>
-                <Paragraph style={styles.userEmail}>Email: {user?.email || 'N/A'}</Paragraph>
+                <Title style={[styles.userName, { color: theme.colors.secondary }]}>{user?.name || 'Designer Name'}</Title>
+                <Paragraph style={[styles.userContact, { color: theme.colors.secondary }]}>Contact: {user?.contact || 'N/A'}</Paragraph>
+                <Paragraph style={[styles.userEmail, { color: theme.colors.secondary }]}>Email: {user?.email || 'N/A'}</Paragraph>
               </View>
             </View>
           </Card.Content>
@@ -113,7 +129,7 @@ const ProfileScreen = () => {
 
         <Card style={[styles.statsCard, { backgroundColor: theme.colors.onPrimary }]}>
           <Card.Content>
-            <Title style={styles.sectionTitle}>Job Statistics</Title>
+            <Title style={[styles.sectionTitle, { color: theme.colors.secondary }]}>Job Statistics</Title>
             <View style={styles.statsGrid}>
               {jobStats.map((stat, index) => (
                 <View key={index} style={styles.statItem}>
@@ -123,8 +139,8 @@ const ProfileScreen = () => {
                     iconColor={theme.colors.primary}
                     style={styles.statIcon}
                   />
-                  <Text style={styles.statValue}>{stat.value}</Text>
-                  <Text style={styles.statLabel}>{stat.title}</Text>
+                  <Text style={[styles.statValue, { color: theme.colors.secondary }]}>{stat.value}</Text>
+                  <Text style={[styles.statLabel, { color: theme.colors.secondary }]}>{stat.title}</Text>
                 </View>
               ))}
             </View>
@@ -133,20 +149,22 @@ const ProfileScreen = () => {
 
         <Card style={[styles.card, { backgroundColor: theme.colors.onPrimary }]}>
           <Card.Content>
-            <Title style={styles.sectionTitle}>Skills & Expertise</Title>
+            <Title style={[styles.sectionTitle, { color: theme.colors.secondary }]}>Skills & Expertise:</Title>
             {skills.map((skill, index) => (
               <List.Item
                 key={index}
                 title={skill.title}
                 left={props => <List.Icon {...props} icon={skill.icon} color={theme.colors.primary} />}
                 style={styles.listItem}
-                titleStyle={styles.listItemTitle}
+                titleStyle={[styles.listItemTitle, { color: theme.colors.secondary }]}
               />
             ))}
           </Card.Content>
         </Card>
 
-         <Card style={[styles.card, { backgroundColor: theme.colors.onPrimary }]}>
+         {/* <Card style={[styles.card, { backgroundColor: theme.colors.onPrimary, borderColor: '#000',
+          borderWidth: 0.5, }]}
+          >
           <Card.Content>
             <List.Item
               title="Add Skills & Expertise"
@@ -155,70 +173,29 @@ const ProfileScreen = () => {
               right={props => <List.Icon {...props} icon="chevron-right" />}
               onPress={handleAddSkills}
               style={styles.listItem}
-              titleStyle={styles.listItemTitle}
-            />
-          </Card.Content>
-        </Card>
-
-        {/* <Card style={[styles.card, { backgroundColor: theme.colors.onPrimary }]}>
-          <Card.Content>
-            <Title style={styles.sectionTitle}>Personal Information</Title>
-            {personalInfo.map((info, index) => (
-              <React.Fragment key={index}>
-                <View style={styles.infoRow}>
-                  <IconButton
-                    icon={info.icon}
-                    size={20}
-                    iconColor={theme.colors.secondary}
-                    style={styles.infoIcon}
-                  />
-                  <View style={styles.infoContent}>
-                    <Text style={styles.infoLabel}>{info.title}</Text>
-                    <Text style={styles.infoValue}>{info.value}</Text>
-                  </View>
-                </View>
-                {index < personalInfo.length - 1 && <Divider style={styles.divider} />}
-              </React.Fragment>
-            ))}
-          </Card.Content>
-        </Card> */}
-
-        {/* <Card style={[styles.card, { backgroundColor: theme.colors.onPrimary }]}>
-          <Card.Content>
-            <Title style={styles.sectionTitle}>Settings</Title>
-            <List.Item
-              title="Push Notifications"
-              description="Receive updates about new jobs and messages"
-              left={props => <List.Icon {...props} icon="bell-outline" color={theme.colors.primary} />}
-              right={() => (
-                <Switch
-                  value={isNotificationsEnabled}
-                  onValueChange={onToggleNotifications}
-                  color={theme.colors.primary}
-                />
-              )}
-              style={styles.listItem}
-              titleStyle={styles.listItemTitle}
-            />
-            <Divider style={styles.divider} />
-            <List.Item
-              title="Location Sharing"
-              description="Share location for job assignments"
-              left={props => <List.Icon {...props} icon="map-marker-outline" color={theme.colors.primary} />}
-              right={() => (
-                <Switch
-                  value={isLocationSharingEnabled}
-                  onValueChange={onToggleLocationSharing}
-                  color={theme.colors.primary}
-                />
-              )}
-              style={styles.listItem}
-              titleStyle={styles.listItemTitle}
+              titleStyle={[styles.listItemTitle, { color: theme.colors.secondary }]}
+              descriptionStyle={{ color: theme.colors.secondary }}
             />
           </Card.Content>
         </Card> */}
-
-       
+        <Card style={[styles.card, styles.smallCard, { 
+  backgroundColor: theme.colors.onPrimary, 
+  borderColor: theme.colors.secondary,
+  borderWidth: 0.5, 
+}]}>
+  <Card.Content style={styles.smallCardContent}>
+    <List.Item
+      title="Add Skills & Expertise"
+      description="Add or update your skills"
+      left={props => <List.Icon {...props} icon="plus-circle-outline" color={theme.colors.primary} />}
+      right={props => <List.Icon {...props} icon="chevron-right" color={theme.colors.primary} />}
+      onPress={handleAddSkills}
+      style={styles.listItem}
+      titleStyle={[styles.listItemTitle, { color: theme.colors.secondary }]}
+      descriptionStyle={{ color: theme.colors.secondary, fontSize: 12 }}
+    />
+  </Card.Content>
+</Card>
       </ScrollView>
     </Container>
   );
@@ -230,33 +207,66 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  headerWrapper: {
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    paddingBottom: 8,
+    backgroundColor: '#ffffff',
+  },
   headerContainer: {
+    flexDirection: 'row',
     alignItems: 'center',
-    marginVertical: 20,
+    padding: 12,
+    borderRadius: 16,
+    justifyContent: 'center',
+    textAlign: 'center',
+    borderBottomColor: '#4a6ea5ff',
+    borderBottomWidth: 0.40,
   },
   logoImage: {
-    width: 100,
-    height: 50,
+    width: 48,
+    height: 48,
+    marginRight: 12,
+  },
+  headerText: {
+    fontSize: 20,
+    fontWeight: '700',
+  },
+  subHeaderText: {
+    fontSize: 11,
+    color: '#FF9500',
+    marginTop: 2,
   },
   card: {
     borderRadius: 12,
     marginHorizontal: 16,
     marginBottom: 16,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
+    elevation: 0,
+    shadowColor: 'transparent',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0,
+    shadowRadius: 0,
+    // borderColor: '#000',
+    // borderWidth: 0.20,
+  },
+    smallCard: {
+    padding: 0,
+    marginHorizontal: 16,
+    marginBottom: 16,
+  },
+  smallCardContent: {
+    paddingVertical: 8,
+    paddingHorizontal: 12,
   },
   statsCard: {
     borderRadius: 12,
     marginHorizontal: 16,
     marginBottom: 16,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
+    elevation: 0,
+    shadowColor: 'transparent',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0,
+    shadowRadius: 0,
   },
   cardContent: {
     paddingVertical: 16,
@@ -273,7 +283,7 @@ const styles = StyleSheet.create({
     bottom: 0,
     right: 0,
     backgroundColor: 'white',
-    elevation: 3,
+    elevation: 0,
   },
   userInfo: {
     marginLeft: 16,
@@ -286,12 +296,10 @@ const styles = StyleSheet.create({
   },
   userContact: {
     fontSize: 14,
-    color: '#666',
     marginBottom: 2,
   },
   userEmail: {
     fontSize: 14,
-    color: '#666',
   },
   sectionTitle: {
     fontSize: 18,
@@ -317,7 +325,6 @@ const styles = StyleSheet.create({
   },
   statLabel: {
     fontSize: 12,
-    color: '#666',
     textAlign: 'center',
     marginTop: 2,
   },
@@ -342,7 +349,6 @@ const styles = StyleSheet.create({
   },
   infoLabel: {
     fontSize: 12,
-    color: '#666',
     marginBottom: 2,
   },
   infoValue: {

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { StyleSheet, KeyboardAvoidingView, Platform, ScrollView, StatusBar } from 'react-native';
+import { StyleSheet, KeyboardAvoidingView, Platform, ScrollView, StatusBar, Image, View } from 'react-native';
 import { Button, Text, TextInput } from 'react-native-paper';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -10,6 +10,7 @@ import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../types/navigation';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
+import { LOGO_IMAGE } from '@assets/images';
 
 // Enhanced validation schema
 const FormSchema = z.object({
@@ -76,6 +77,22 @@ const LoginScreen = () => {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
      <StatusBar backgroundColor="#fff" barStyle="dark-content" />
+        <View style={styles.headerWrapper}>
+             <View style={styles.headerContainer}>
+               <Image
+                 source={LOGO_IMAGE}
+                 style={styles.logoImage}
+                 resizeMode="contain"
+               />
+           
+               <View>
+                 <Text style={[styles.headerText, { color: '#4A6FA5' }]}>Design Ease</Text>
+                 <Text style={styles.subHeaderText}>
+                   Interior Work Manager
+                 </Text>
+               </View>
+             </View>
+           </View>
       <ScrollView 
         contentContainerStyle={styles.scrollContent}
         keyboardShouldPersistTaps="handled"
@@ -198,6 +215,37 @@ const styles = StyleSheet.create({
   keyboardAvoid: {
     flex: 1,
   },
+  headerWrapper: {
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    paddingBottom: 8,
+    backgroundColor: '#ffffff',
+  },
+  headerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 12,
+    borderRadius: 16,
+    justifyContent: 'center',
+    textAlign: 'center',
+    // borderBottomColor: '#4a6ea5ff',
+    // borderBottomWidth: 0.40,
+  },
+  logoImage: {
+    width: 68,
+    height: 68,
+    marginRight: 12,
+  },
+  headerText: {
+    fontSize: 28,
+    fontWeight: '700',
+    color: '#4A6FA5',
+  },
+  subHeaderText: {
+    fontSize: 16,
+    color: '#FF9500',
+    marginTop: 2,
+  },
   scrollContent: {
     flexGrow: 1,
   },
@@ -221,7 +269,7 @@ const styles = StyleSheet.create({
 
 const Container = styled.View`
   flex: 1;
-  background-color: #f8f9fa;
+  background-color: #ffffffff;
   min-height: 100%;
 `;
 

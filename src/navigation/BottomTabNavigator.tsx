@@ -7,6 +7,8 @@ import ProfileScreen from '@features/profile/ProfileScreen';
 
 const Tab = createBottomTabNavigator();
 
+let jobsTabParams = { filter: 'Pending' }; 
+
 const BottomTabNavigator = () => {
   return (
     <Tab.Navigator
@@ -16,12 +18,11 @@ const BottomTabNavigator = () => {
           let iconSize = size;
           let iconColor = color;
 
-          // Increase size slightly when focused
           if (focused) {
-            iconSize = size * 1.15; // 15% larger
-            iconColor = '#4A6FA5'; // Dark blue for active
+            iconSize = size * 1.15;
+            iconColor = '#4A6FA5';
           } else {
-            iconColor = '#63acceff'; // Light blue for inactive
+            iconColor = '#63acceff';
           }
 
           if (route.name === 'DashboardTab') {
@@ -34,13 +35,13 @@ const BottomTabNavigator = () => {
 
           return <MaterialCommunityIcons name={iconName} size={iconSize} color={iconColor} />;
         },
-        tabBarActiveTintColor: '#4A6FA5', // Dark color for active tab text
-        tabBarInactiveTintColor: '#63acceff', // Blue color for inactive tab text
+        tabBarActiveTintColor: '#4A6FA5',
+        tabBarInactiveTintColor: '#63acceff',
         tabBarLabelStyle: ({ focused }) => ({
           fontSize: 12,
           fontWeight: focused ? '600' : '400',
-          marginBottom: focused ? 4 : 2, // More margin when active
-          transform: [{ scale: focused ? 1.05 : 1 }], // Slightly enlarge text when active
+          marginBottom: focused ? 4 : 2,
+          transform: [{ scale: focused ? 1.05 : 1 }],
         }),
         tabBarStyle: {
           backgroundColor: '#ffffff',
@@ -58,11 +59,21 @@ const BottomTabNavigator = () => {
         component={DashboardScreen}
         options={{ tabBarLabel: 'Dashboard' }}
       />
-      <Tab.Screen
-        name="JobsTab"
-        component={JobListScreen}
-        options={{ tabBarLabel: 'Jobs' }}
-      />
+     <Tab.Screen
+            name="JobsTab"
+            component={JobListScreen}
+            options={{ 
+              tabBarLabel: 'Jobs',
+            }}
+            initialParams={{ filter: 'Pending' }}
+            listeners={({ navigation, route }) => ({
+              // Update params when tab is focused
+              tabPress: (e) => {
+                // Pass the stored params
+                navigation.setParams(jobsTabParams);
+              },
+            })}
+          />
       <Tab.Screen
         name="ProfileTab"
         component={ProfileScreen}
@@ -70,6 +81,10 @@ const BottomTabNavigator = () => {
       />
     </Tab.Navigator>
   );
+};
+
+export const updateJobsTabParams = (params) => {
+  jobsTabParams = params;
 };
 
 export default BottomTabNavigator;
