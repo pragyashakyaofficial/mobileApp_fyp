@@ -189,33 +189,47 @@ const ProfileScreen = () => {
   // Handle different possible structures for skills in the API response
   let skills = [];
   
-  if (profileData?.skills) {
-    // If skills is an array of objects with name property
-    if (Array.isArray(profileData.skills)) {
-      skills = profileData.skills.map((skill, index) => ({
-        title: skill.name || skill.title || skill.skill || `Skill ${index + 1}`,
-        icon: 'circle',
-        id: skill.id || skill._id || index.toString()
-      }));
-    }
-  } else if (displayUser?.skills) {
-    // Fallback to displayUser skills
-    if (Array.isArray(displayUser.skills)) {
-      skills = displayUser.skills.map((skill, index) => ({
-        title: skill.name || skill.title || skill.skill || `Skill ${index + 1}`,
-        icon: 'circle',
-        id: skill.id || skill._id || index.toString()
-      }));
-    }
+if (profileData?.skills) {
+  console.log('Getting skills from profileData API:', profileData.skills);
+  skills = profileData.skills.map((skill, index) => ({
+    title: skill.name,
+    icon: 'circle',
+    id: skill.id?.toString() || index.toString()
+  }));
+} 
+// If API returns data but skills array is empty or undefined in profileData
+else if (displayUser?.skills) {
+  console.log('Getting skills from displayUser:', displayUser.skills);
+  if (Array.isArray(displayUser.skills)) {
+    skills = displayUser.skills.map((skill, index) => ({
+      title: skill.name || skill.title || skill.skill || `Skill ${index + 1}`,
+      icon: 'circle',
+      id: skill.id || skill._id || index.toString()
+    }));
   }
-  
-  // If no skills from API, use default skills
-  if (skills.length === 0) {
-    skills = [
-      { title: 'Interior Design', icon: 'circle', id: '1' },
-      { title: displayUser?.position || displayUser?.role || 'Designer', icon: 'circle', id: '2' },
-    ];
-  }
+}
+
+// Debug: Add this to see what's happening
+console.log('Final skills array:', skills);
+console.log('profileData:', profileData);
+console.log('displayUser:', displayUser);
+
+// If still no skills, show defaults
+if (skills.length === 0) {
+  console.log('No skills found, using defaults');
+  skills = [
+    { title: 'Interior Design', icon: 'circle', id: '1' },
+    { title: displayUser?.role || 'Worker', icon: 'circle', id: '2' },
+  ];
+}
+
+// If still no skills (unlikely with your API response), show defaults
+// if (skills.length === 0) {
+//   skills = [
+//     { title: 'Interior Design', icon: 'circle', id: '1' },
+//     { title: displayUser?.role || 'Worker', icon: 'circle', id: '2' },
+//   ];
+// }
   
   // Debug: Log the skills being displayed
   console.log('Skills to display:', skills);
@@ -224,17 +238,20 @@ const ProfileScreen = () => {
   const jobStats = [
     { 
       title: 'Total Jobs Done', 
-      value: profileData?.totalJobs?.toString() || displayUser?.totalJobs?.toString() || '15', 
+      // value: profileData?.totalJobs?.toString() || displayUser?.totalJobs?.toString() || '15', 
+      value: '12',
       icon: 'clipboard-list' 
     },
     { 
       title: 'Completion Rate', 
-      value: profileData?.completionRate?.toString() + '%' || displayUser?.completionRate?.toString() + '%' || '95%', 
+      // value: profileData?.completionRate?.toString() + '%' || displayUser?.completionRate?.toString() + '%' || '95%', 
+      value: '95%',
       icon: 'chart-line' 
     },
     { 
       title: 'Current Rating', 
-      value: profileData?.rating?.toString() + ' ★' || displayUser?.rating?.toString() + ' ★' || '4.5 ★', 
+      // value: profileData?.rating?.toString() + ' ★' || displayUser?.rating?.toString() + ' ★' || '4.5 ★', 
+      value: '4.5 ★',
       icon: 'star' 
     },
   ];
@@ -243,6 +260,14 @@ const ProfileScreen = () => {
     { title: 'Branch', value: user?.branch || 'Main Branch', icon: 'office-building' },
     { title: 'Joined Date', value: user?.joineddate || 'N/A', icon: 'calendar' },
   ];
+
+const getInitials = (name: string): string => {
+  if (!name) return '?';
+  
+  const nameParts = name.trim().split(' ');
+  // Take only the first letter of the first name
+  return nameParts[0][0].toUpperCase();
+};
 
   return (
     <Container>
@@ -283,17 +308,23 @@ const ProfileScreen = () => {
           <Card.Content style={styles.cardContent}>
             <View style={styles.userHeader}>
               <View style={styles.avatarContainer}>
-                <Avatar.Image
+                {/* <Avatar.Image
                   size={80}
                   source={{ uri: 'https://i.pravatar.cc/150?u=a042581f4e29026704d' }}
-                />
-                <IconButton
+                /> */}
+                <Avatar.Text
+    size={80}
+    label={getInitials(displayUser?.name || user?.name || 'Designer Name')}
+    style={{ backgroundColor: theme.colors.primary }}
+    color="#FFFFFF"
+  />
+                {/* <IconButton
                   icon="pencil"
                   size={20}
                   onPress={handleAddSkills}
                   style={styles.editButton}
                   iconColor={theme.colors.primary}
-                />
+                /> */}
               </View>
               <View style={styles.userInfo}>
                 <Title style={[styles.userName, { color: theme.colors.secondary }]}>
