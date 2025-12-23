@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
-import { FlatList, View, StyleSheet, Image, StatusBar } from 'react-native';
-import { Text, SegmentedButtons, useTheme, MD3Theme } from 'react-native-paper';
+import { FlatList, View, StyleSheet, Image, StatusBar, RefreshControl } from 'react-native';
+import { Text, SegmentedButtons, useTheme, MD3Theme, ActivityIndicator } from 'react-native-paper';
 import { useRoute, RouteProp } from '@react-navigation/native';
 import styled from 'styled-components/native';
 
@@ -19,12 +19,27 @@ const JobListScreen = () => {
   const initialFilter = route.params?.filter || 'Pending';
 
   const [selectedSegment, setSelectedSegment] = useState<'Pending' | 'Completed'>(initialFilter);
-  const { data: jobsResponse, isLoading, isError, error } = useListJobsQuery();
+  const [refreshing, setRefreshing] = useState(false);
+  const { data: jobsResponse, isLoading, isError, error, refetch: refetchJobs } = useListJobsQuery();
 
   const filteredJobs = useMemo(() => {
     const jobs = jobsResponse?.data || [];
     return jobs.filter(job => job.status === selectedSegment);
   }, [jobsResponse, selectedSegment]);
+  
+  // Pull-to-refresh handler
+  const onRefresh = async () => {
+    setRefreshing(true);
+    try {
+      // Refetch jobs data
+      await refetchJobs();
+      console.log('JobList refreshed');
+    } catch (error) {
+      console.error('Refresh error:', error);
+    } finally {
+      setRefreshing(false);
+    }
+  };
 
   if (isLoading) {
     return <CenteredContainer><ListSkeleton items={5} /></CenteredContainer>;
@@ -90,6 +105,17 @@ const JobListScreen = () => {
           renderItem={({ item }) => <JobCard job={item} selectedStatus={selectedSegment} />}
           keyExtractor={(item) => item.id.toString()}
           contentContainerStyle={themedStyles.list}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              colors={[theme.colors.primary]}
+              tintColor={theme.colors.primary}
+              progressBackgroundColor="#ffffff"
+              title="Refreshing..."
+              titleColor={theme.colors.secondary}
+            />
+          }
         />
      
       </View>

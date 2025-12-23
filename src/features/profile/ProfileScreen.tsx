@@ -1,5 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { View, ScrollView, Alert, StyleSheet, Image } from 'react-native';
+import { 
+  View, 
+  ScrollView, 
+  Alert, 
+  StyleSheet, 
+  Image, 
+  RefreshControl
+} from 'react-native';
 import {
   Avatar,
   Title,
@@ -11,7 +18,8 @@ import {
   useTheme,
   Text,
   Divider,
-  Button
+  Button,
+  ActivityIndicator
 } from 'react-native-paper';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { NavigationProp, useNavigation } from '@react-navigation/native';
@@ -23,6 +31,7 @@ import { LOGO_IMAGE } from '@assets/images';
 import { RootStackParamList } from '../../types/navigation';
 import { useLogoutMutation } from '../auth/authApiSlice';
 import { logout } from '../auth/authSlice';
+import { useGetProfileQuery, UserProfile } from './profileApiSlice';
 
 const ProfileScreen = () => {
   const theme = useTheme();
@@ -32,8 +41,19 @@ const ProfileScreen = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isNotificationsEnabled, setIsNotificationsEnabled] = useState(false);
   const [isLocationSharingEnabled, setIsLocationSharingEnabled] = useState(false);
+  const [retryKey, setRetryKey] = useState(0);
+  const [refreshing, setRefreshing] = useState(false);
   
   const [logoutMutation, { isLoading: isLoggingOut }] = useLogoutMutation();
+  
+  // API hook for profile data with refetch function
+  const { 
+    data: profileData, 
+    isLoading: isLoadingProfile, 
+    error: profileError, 
+    refetch: refetchProfile,
+    isFetching: isFetchingProfile
+  } = useGetProfileQuery();
 
   useEffect(() => {
     const loadUserData = async () => {
@@ -52,6 +72,59 @@ const ProfileScreen = () => {
 
     loadUserData();
   }, []);
+
+  // Pull-to-refresh handler
+  const onRefresh = async () => {
+    setRefreshing(true);
+    try {
+      // Force refetch profile data from API
+      const result = await refetchProfile();
+      
+      // Also refresh AsyncStorage user data
+      const userData = await AsyncStorage.getItem('user');
+      if (userData) {
+        setUser(JSON.parse(userData));
+      }
+      
+      console.log('Profile refreshed:', result);
+      
+    } catch (error) {
+      console.error('Refresh error:', error);
+      Alert.alert('Error', 'Failed to refresh data');
+    } finally {
+      setRefreshing(false);
+    }
+  };
+  
+  // Show loading state while fetching profile data
+  if (isLoadingProfile && !refreshing) {
+    return (
+      <Container>
+        <View style={styles.centered}>
+          <ActivityIndicator size="large" color={theme.colors.primary} />
+          <Text style={styles.loadingText}>Loading profile...</Text>
+        </View>
+      </Container>
+    );
+  }
+  
+  // Show error state if API call fails
+  if (profileError && !refreshing) {
+    return (
+      <Container>
+        <View style={styles.centered}>
+          <Text style={styles.errorText}>Failed to load profile data</Text>
+          <Button 
+            mode="contained" 
+            onPress={() => refetchProfile()}
+            style={styles.retryButton}
+          >
+            Retry
+          </Button>
+        </View>
+      </Container>
+    );
+  }
 
   const onToggleNotifications = () => setIsNotificationsEnabled(!isNotificationsEnabled);
   const onToggleLocationSharing = () => setIsLocationSharingEnabled(!isLocationSharingEnabled);
@@ -75,8 +148,6 @@ const ProfileScreen = () => {
           onPress: async () => {
             try {
               await logoutMutation(null).unwrap();
-              // Navigation will be handled automatically by auth state change
-              // But we can also add explicit navigation as backup
               setTimeout(() => {
                 navigation.reset({
                   index: 0,
@@ -85,8 +156,6 @@ const ProfileScreen = () => {
               }, 100);
             } catch (error) {
               console.error('Logout error:', error);
-              // Even if there's an error, the user will be logged out due to the onQueryStarted handler
-              // Add explicit navigation as backup
               navigation.reset({
                 index: 0,
                 routes: [{ name: 'Login' }],
@@ -98,7 +167,7 @@ const ProfileScreen = () => {
     );
   };
 
-  if (isLoading) {
+  if (isLoading && !refreshing) {
     return (
       <Container>
         <View style={styles.centered}>
@@ -108,16 +177,66 @@ const ProfileScreen = () => {
     );
   }
 
-  const skills = [
-    { title: 'Interior Design', icon: 'palette' },
-    { title: 'Project Management', icon: 'clipboard-check-outline' },
-    { title: user?.position || 'Designer', icon: 'badge-account' },
-  ];
+  // Use profile data from API if available, fallback to AsyncStorage data
+  const displayUser = profileData || user;
+  
+  // Debug: Log the profile data to see its structure
+  console.log('Profile Data:', profileData);
+  console.log('User Data:', user);
+  console.log('Display User:', displayUser);
+  
+  // Extract skills from API response - FIXED VERSION
+  // Handle different possible structures for skills in the API response
+  let skills = [];
+  
+  if (profileData?.skills) {
+    // If skills is an array of objects with name property
+    if (Array.isArray(profileData.skills)) {
+      skills = profileData.skills.map((skill, index) => ({
+        title: skill.name || skill.title || skill.skill || `Skill ${index + 1}`,
+        icon: 'circle',
+        id: skill.id || skill._id || index.toString()
+      }));
+    }
+  } else if (displayUser?.skills) {
+    // Fallback to displayUser skills
+    if (Array.isArray(displayUser.skills)) {
+      skills = displayUser.skills.map((skill, index) => ({
+        title: skill.name || skill.title || skill.skill || `Skill ${index + 1}`,
+        icon: 'circle',
+        id: skill.id || skill._id || index.toString()
+      }));
+    }
+  }
+  
+  // If no skills from API, use default skills
+  if (skills.length === 0) {
+    skills = [
+      { title: 'Interior Design', icon: 'circle', id: '1' },
+      { title: displayUser?.position || displayUser?.role || 'Designer', icon: 'circle', id: '2' },
+    ];
+  }
+  
+  // Debug: Log the skills being displayed
+  console.log('Skills to display:', skills);
 
+  // Update job stats to potentially use real data from API
   const jobStats = [
-    { title: 'Total Jobs Done', value: '15', icon: 'clipboard-list' },
-    { title: 'Completion Rate', value: '95%', icon: 'chart-line' },
-    { title: 'Current Rating', value: '4.5 ★', icon: 'star' },
+    { 
+      title: 'Total Jobs Done', 
+      value: profileData?.totalJobs?.toString() || displayUser?.totalJobs?.toString() || '15', 
+      icon: 'clipboard-list' 
+    },
+    { 
+      title: 'Completion Rate', 
+      value: profileData?.completionRate?.toString() + '%' || displayUser?.completionRate?.toString() + '%' || '95%', 
+      icon: 'chart-line' 
+    },
+    { 
+      title: 'Current Rating', 
+      value: profileData?.rating?.toString() + ' ★' || displayUser?.rating?.toString() + ' ★' || '4.5 ★', 
+      icon: 'star' 
+    },
   ];
 
   const personalInfo = [
@@ -127,7 +246,20 @@ const ProfileScreen = () => {
 
   return (
     <Container>
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <ScrollView 
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={[theme.colors.primary]}
+            tintColor={theme.colors.primary}
+            progressBackgroundColor="#ffffff"
+            title="Refreshing..."
+            titleColor={theme.colors.secondary}
+          />
+        }
+      >
        <View style={styles.headerWrapper}>
         <View style={styles.headerContainer}>
           <Image
@@ -164,9 +296,15 @@ const ProfileScreen = () => {
                 />
               </View>
               <View style={styles.userInfo}>
-                <Title style={[styles.userName, { color: theme.colors.secondary }]}>{user?.name || 'Designer Name'}</Title>
-                <Paragraph style={[styles.userContact, { color: theme.colors.secondary }]}>Contact: {user?.contact || 'N/A'}</Paragraph>
-                <Paragraph style={[styles.userEmail, { color: theme.colors.secondary }]}>Email: {user?.email || 'N/A'}</Paragraph>
+                <Title style={[styles.userName, { color: theme.colors.secondary }]}>
+                  {displayUser?.name || user?.name || 'Designer Name'}
+                </Title>
+                <Paragraph style={[styles.userContact, { color: theme.colors.secondary }]}>
+                  Contact: {displayUser?.contact || user?.contact || 'N/A'}
+                </Paragraph>
+                <Paragraph style={[styles.userEmail, { color: theme.colors.secondary }]}>
+                  Email: {displayUser?.email || user?.email || 'N/A'}
+                </Paragraph>
               </View>
             </View>
           </Card.Content>
@@ -194,16 +332,30 @@ const ProfileScreen = () => {
 
         <Card style={[styles.card, { backgroundColor: theme.colors.onPrimary }]}>
           <Card.Content>
-            <Title style={[styles.sectionTitle, { color: theme.colors.secondary }]}>Skills & Expertise:</Title>
-            {skills.map((skill, index) => (
-              <List.Item
-                key={index}
-                title={skill.title}
-                left={props => <List.Icon {...props} icon={skill.icon} color={theme.colors.primary} />}
-                style={styles.listItem}
-                titleStyle={[styles.listItemTitle, { color: theme.colors.secondary }]}
-              />
-            ))}
+            <Title style={[styles.sectionTitle, { color: theme.colors.secondary }]}>
+              Skills & Expertise ({skills.length})
+            </Title>
+            <View style={styles.skillsContainer}>
+              {skills.map((skill, index) => (
+                <View key={skill.id || index} style={styles.skillItem}>
+                  <View style={[styles.skillBullet, { backgroundColor: theme.colors.primary }]}>
+                    <Text style={styles.skillBulletText}>•</Text>
+                  </View>
+                  <Text style={[styles.skillName, { color: theme.colors.secondary }]}>
+                    {skill.title}
+                  </Text>
+                </View>
+              ))}
+            </View>
+            
+            {/* Show a message if no skills */}
+            {skills.length === 0 && (
+              <View style={styles.noSkillsContainer}>
+                <Text style={[styles.noSkillsText, { color: theme.colors.secondary }]}>
+                  No skills added yet. Tap "Add Skills & Expertise" below to add your skills.
+                </Text>
+              </View>
+            )}
           </Card.Content>
         </Card>
 
@@ -228,28 +380,18 @@ const ProfileScreen = () => {
         
         {/* Pretty Logout Button */}
         <View style={styles.logoutContainer}>
-          {/* <Card style={[styles.logoutCard, { 
-            backgroundColor: theme.colors.onPrimary,
-            borderColor: theme.colors.accent,
-          }]}>
-            <Card.Content style={styles.logoutCardContent}> */}
-              <Button
-                mode="outlined"
-                onPress={handleLogout}
-                loading={isLoggingOut}
-                disabled={isLoggingOut}
-                style={styles.logoutButton}
-                contentStyle={styles.logoutButtonContent}
-                labelStyle={styles.logoutButtonLabel}
-                icon="logout-variant"
-              >
-                {isLoggingOut ? 'Logging Out...' : 'Logout'}
-              </Button>
-              {/* <Text style={[styles.logoutWarning, { color: theme.colors.secondary }]}>
-                You'll be signed out from all devices
-              </Text> */}
-            {/* </Card.Content>
-          </Card> */}
+          <Button
+            mode="outlined"
+            onPress={handleLogout}
+            loading={isLoggingOut}
+            disabled={isLoggingOut}
+            style={styles.logoutButton}
+            contentStyle={styles.logoutButtonContent}
+            labelStyle={styles.logoutButtonLabel}
+            icon="logout-variant"
+          >
+            {isLoggingOut ? 'Logging Out...' : 'Logout'}
+          </Button>
         </View>
       </ScrollView>
     </Container>
@@ -411,25 +553,51 @@ const styles = StyleSheet.create({
   divider: {
     marginVertical: 4,
   },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: '#666',
+  },
+  errorText: {
+    fontSize: 16,
+    color: '#ff4444',
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  retryButton: {
+    paddingHorizontal: 20,
+  },
+  skillsContainer: {
+    paddingHorizontal: 8,
+  },
+  skillItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 4,
+  },
+  skillBullet: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  skillBulletText: {
+    color: '#ffffff',
+    fontSize: 16,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    lineHeight: 20,
+  },
+  skillName: {
+    fontSize: 16,
+    flex: 1,
+  },
   logoutContainer: {
     paddingHorizontal: 16,
     marginBottom: 32,
-    marginTop: 8,
-  },
-  logoutCard: {
-    borderRadius: 12,
-    borderWidth: 0.2,
-    borderColor: '#000',
-    elevation: 0,
-    shadowColor: 'transparent',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0,
-    shadowRadius: 0,
-  },
-  logoutCardContent: {
-    paddingVertical: 16,
-    paddingHorizontal: 16,
-    alignItems: 'center',
   },
   logoutButton: {
     borderRadius: 8,
@@ -446,12 +614,16 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     letterSpacing: 0.5,
   },
-  logoutWarning: {
-    fontSize: 12,
-    textAlign: 'center',
-    marginTop: 12,
+  noSkillsContainer: {
+    padding: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  noSkillsText: {
+    fontSize: 14,
     fontStyle: 'italic',
-    opacity: 0.8,
+    textAlign: 'center',
+    opacity: 0.7,
   },
 });
 

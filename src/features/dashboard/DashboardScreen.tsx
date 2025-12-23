@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { ScrollView, View, StyleSheet, Dimensions, Pressable, StatusBar, Image } from 'react-native';
-import { Text, Card, IconButton, useTheme, Divider, Button, Surface, MD3Theme } from 'react-native-paper';
+import { ScrollView, View, StyleSheet, Dimensions, Pressable, StatusBar, Image, RefreshControl } from 'react-native';
+import { Text, Card, IconButton, useTheme, Divider, Button, Surface, MD3Theme, ActivityIndicator } from 'react-native-paper';
 import { useNavigation, NavigationProp, CommonActions } from '@react-navigation/native';
 import styled from 'styled-components/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -25,9 +25,10 @@ const DashboardScreen = () => {
   const theme = useTheme();
   const themedStyles = styles(theme);
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
-  const { data: jobs, isLoading: isLoadingJobs, isError, error } = useGetMyJobsQuery();
+  const { data: jobs, isLoading: isLoadingJobs, isError, error, refetch: refetchJobs } = useGetMyJobsQuery();
   const [user, setUser] = useState<User | null>(null);
   const [isLoadingUser, setIsLoadingUser] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
   
 
@@ -47,6 +48,27 @@ const DashboardScreen = () => {
 
     fetchUser();
   }, []);
+  
+  // Pull-to-refresh handler
+  const onRefresh = async () => {
+    setRefreshing(true);
+    try {
+      // Refetch jobs data
+      await refetchJobs();
+      
+      // Also refresh user data from AsyncStorage
+      const userData = await AsyncStorage.getItem('user');
+      if (userData) {
+        setUser(JSON.parse(userData));
+      }
+      
+      console.log('Dashboard refreshed');
+    } catch (error) {
+      console.error('Refresh error:', error);
+    } finally {
+      setRefreshing(false);
+    }
+  };
 
   if (isLoadingJobs || isLoadingUser) {
     return <DashboardSkeleton />;
@@ -75,7 +97,20 @@ const DashboardScreen = () => {
   };
 
   return (
-    <ScrollView style={themedStyles.container}>
+    <ScrollView 
+      style={themedStyles.container}
+      refreshControl={
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={onRefresh}
+          colors={[theme.colors.primary]}
+          tintColor={theme.colors.primary}
+          progressBackgroundColor="#ffffff"
+          title="Refreshing..."
+          titleColor={theme.colors.secondary}
+        />
+      }
+    >
       <StatusBar backgroundColor="#ffffff" barStyle="dark-content" />
       <View style={themedStyles.headerWrapper}>
        <View style={themedStyles.headerContainer}>
