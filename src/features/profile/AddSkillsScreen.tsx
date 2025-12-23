@@ -1,38 +1,68 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, ScrollView, StyleSheet, Alert, TouchableOpacity } from 'react-native';
-import { Button, Checkbox, Text, useTheme, Appbar } from 'react-native-paper';
+import { Button, Checkbox, Text, useTheme, Appbar, ActivityIndicator } from 'react-native-paper';
 import { NavigationProp, useNavigation } from '@react-navigation/native';
 import { RootStackParamList } from '../../types/navigation';
-
-const availableSkills = [
-  'Interior Design',
-  'Project Management',
-  'CAD Drawing',
-  '3D Modeling',
-  'Space Planning',
-  'Color Theory',
-  'Lighting Design',
-  'Furniture Design',
-];
+import { useGetAllSkillsQuery, useGetUserSkillsQuery, useUpdateSkillsMutation, Skill } from './skillsApiSlice';
 
 const AddSkillsScreen = () => {
   const theme = useTheme();
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
-  const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
+  const [selectedSkillIds, setSelectedSkillIds] = useState<number[]>([]);
+  const [retryKey, setRetryKey] = useState(0);
+  
+  // API hooks
+  const { data: allSkills = [], isLoading: isLoadingSkills, error: skillsError, refetch } = useGetAllSkillsQuery();
+  const { data: userSkills = [], isLoading: isLoadingUserSkills } = useGetUserSkillsQuery();
+  const [updateSkills, { isLoading: isUpdating }] = useUpdateSkillsMutation();
+  
+  // Initialize selected skills when user skills are loaded
+  useEffect(() => {
+    if (userSkills.length > 0) {
+      const userSkillIds = userSkills.map(skill => skill.id);
+      setSelectedSkillIds(userSkillIds);
+    }
+  }, [userSkills]);
 
-  const handleToggleSkill = (skill: string) => {
-    setSelectedSkills(prev =>
-      prev.includes(skill) ? prev.filter(s => s !== skill) : [...prev, skill]
+  const handleToggleSkill = (skillId: number) => {
+    setSelectedSkillIds(prev =>
+      prev.includes(skillId) ? prev.filter(id => id !== skillId) : [...prev, skillId]
     );
   };
+  
+  const hasChanges = () => {
+    const currentUserSkillIds = userSkills.map(skill => skill.id);
+    return currentUserSkillIds.length !== selectedSkillIds.length || 
+           !currentUserSkillIds.every(id => selectedSkillIds.includes(id));
+  };
 
-  const handleSubmit = () => {
-    console.log('Selected skills:', selectedSkills);
-    navigation.goBack();
+  const handleSubmit = async () => {
+    if (selectedSkillIds.length === 0) {
+      Alert.alert('Error', 'Please select at least one skill.');
+      return;
+    }
+    
+    try {
+      await updateSkills({ skills: selectedSkillIds }).unwrap();
+      Alert.alert(
+        'Success',
+        'Your skills have been updated successfully!',
+        [
+          {
+            text: 'OK',
+            onPress: () => navigation.goBack()
+          }
+        ]
+      );
+    } catch (error: any) {
+      console.error('Failed to update skills:', error);
+      const errorMessage = error.data?.message || 'Failed to update skills. Please try again.';
+      Alert.alert('Error', errorMessage);
+    }
   };
 
   const handleBackPress = () => {
-    if (selectedSkills.length > 0) {
+    if (hasChanges()) {
       Alert.alert(
         'Discard Changes?',
         'You have unsaved changes. Are you sure you want to go back?',
@@ -49,6 +79,32 @@ const AddSkillsScreen = () => {
       navigation.goBack();
     }
   };
+  
+  // Show loading state while fetching skills
+  if (isLoadingSkills || isLoadingUserSkills) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color={theme.colors.primary} />
+        <Text style={styles.loadingText}>Loading skills...</Text>
+      </View>
+    );
+  }
+  
+  // Show error state if API call fails
+  if (skillsError) {
+    return (
+      <View style={styles.errorContainer}>
+        <Text style={styles.errorText}>Failed to load skills. Please try again.</Text>
+        <Button 
+          mode="contained" 
+          onPress={() => refetch()}
+          style={styles.retryButton}
+        >
+          Retry
+        </Button>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -56,8 +112,8 @@ const AddSkillsScreen = () => {
       <Appbar.Header style={styles.header}>
         <Appbar.BackAction onPress={handleBackPress} />
         <Appbar.Content title="Select Your Skills" />
-        {selectedSkills.length > 0 && (
-          <Text style={styles.changesText}>{selectedSkills.length} selected</Text>
+        {selectedSkillIds.length > 0 && (
+          <Text style={styles.changesText}>{selectedSkillIds.length} selected</Text>
         )}
       </Appbar.Header>
 
@@ -67,25 +123,32 @@ const AddSkillsScreen = () => {
         </Text>
         
         <View style={styles.skillsContainer}>
-          {availableSkills.map(skill => {
-            const isSelected = selectedSkills.includes(skill);
+          {allSkills.map(skill => {
+            const isSelected = selectedSkillIds.includes(skill.id);
             return (
               <TouchableOpacity
-                key={skill}
+                key={skill.id}
                 style={[
                   styles.skillItem,
                   isSelected && styles.skillItemSelected
                 ]}
-                onPress={() => handleToggleSkill(skill)}
+                onPress={() => handleToggleSkill(skill.id)}
                 activeOpacity={0.7}
               >
                 <View style={styles.skillContent}>
-                  <Text style={[
-                    styles.skillLabel,
-                    isSelected && styles.skillLabelSelected
-                  ]}>
-                    {skill}
-                  </Text>
+                  <View style={styles.skillTextContainer}>
+                    <Text style={[
+                      styles.skillLabel,
+                      isSelected && styles.skillLabelSelected
+                    ]}>
+                      {skill.name}
+                    </Text>
+                    {skill.description && (
+                      <Text style={styles.skillDescription}>
+                        {skill.description}
+                      </Text>
+                    )}
+                  </View>
                   <Checkbox.Android
                     status={isSelected ? 'checked' : 'unchecked'}
                     color={theme.colors.primary}
@@ -96,15 +159,18 @@ const AddSkillsScreen = () => {
           })}
         </View>
 
-        {selectedSkills.length > 0 && (
+        {selectedSkillIds.length > 0 && (
           <View style={styles.selectedContainer}>
-            <Text style={styles.selectedTitle}>Selected Skills ({selectedSkills.length}):</Text>
+            <Text style={styles.selectedTitle}>Selected Skills ({selectedSkillIds.length}):</Text>
             <View style={styles.selectedSkillsList}>
-              {selectedSkills.map(skill => (
-                <View key={skill} style={styles.selectedSkillTag}>
-                  <Text style={styles.selectedSkillText}>{skill}</Text>
-                </View>
-              ))}
+              {selectedSkillIds.map(skillId => {
+                const skill = allSkills.find(s => s.id === skillId);
+                return skill ? (
+                  <View key={skillId} style={styles.selectedSkillTag}>
+                    <Text style={styles.selectedSkillText}>{skill.name}</Text>
+                  </View>
+                ) : null;
+              })}
             </View>
           </View>
         )}
@@ -123,10 +189,11 @@ const AddSkillsScreen = () => {
           mode="contained" 
           onPress={handleSubmit} 
           style={[styles.button, styles.submitButton]}
-          disabled={selectedSkills.length === 0}
+          disabled={selectedSkillIds.length === 0 || isUpdating}
+          loading={isUpdating}
           contentStyle={styles.submitButtonContent}
         >
-          Save Skills
+          {isUpdating ? 'Saving...' : 'Save Skills'}
         </Button>
       </View>
     </View>
@@ -243,6 +310,43 @@ const styles = StyleSheet.create({
   },
   submitButtonContent: {
     height: 48,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#ffffff',
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: '#666',
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#ffffff',
+    paddingHorizontal: 20,
+  },
+  errorText: {
+    fontSize: 16,
+    color: '#ff4444',
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  retryButton: {
+    paddingHorizontal: 20,
+  },
+  skillTextContainer: {
+    flex: 1,
+    marginRight: 12,
+  },
+  skillDescription: {
+    fontSize: 14,
+    color: '#666',
+    marginTop: 4,
+    lineHeight: 18,
   },
 });
 
