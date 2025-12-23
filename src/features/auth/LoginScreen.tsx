@@ -363,7 +363,7 @@ const TermsText = styled(Text)`
 `;
 
 const TermsLink = styled(Text)`
-  color: #6200ee;
+  color: #4A6FA5;
   font-weight: 500;
 `;
 

@@ -1,13 +1,17 @@
 import React from 'react';
-import {StyleSheet} from 'react-native';
-import {ActivityIndicator, MD3Theme} from 'react-native-paper';
+import {StyleSheet, View} from 'react-native';
+import {MD3Theme} from 'react-native-paper';
 
-import {useThemedStyles} from '@hooks/useThemedStyles';
+import SkeletonLoader from './SkeletonLoader';
 
 export default function PrimarySpinner() {
-  const themedStyles = useThemedStyles(styles);
+  const themedStyles = styles({} as MD3Theme);
 
-  return <ActivityIndicator style={themedStyles.container} />;
+  return (
+    <SkeletonLoader style={{}}>
+      <View style={themedStyles.container} />
+    </SkeletonLoader>
+  );
 }
 
 const styles = (theme: MD3Theme) =>

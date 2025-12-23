@@ -6,6 +6,7 @@ import MapView, { Marker } from 'react-native-maps';
 import { RouteProp, useRoute, useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useGetJobDetailsQuery } from './jobApiSlice';
+import { CardSkeleton } from '@components/SkeletonLoader';
 
 type RootStackParamList = {
   JobDetails: { jobId: string };
@@ -14,7 +15,7 @@ type RootStackParamList = {
 
 type JobDetailsScreenRouteProp = RouteProp<RootStackParamList, 'JobDetails'>;
 
-import { ActivityIndicator, Text } from 'react-native-paper';
+import { Text } from 'react-native-paper';
 
 type JobDetailsNavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -26,7 +27,7 @@ const JobDetailsScreen = () => {
   const { data: job, isLoading, isError } = useGetJobDetailsQuery(jobId);
 
   if (isLoading) {
-    return <ActivityIndicator animating={true} />;
+    return <CardSkeleton height={400} />;
   }
 
   if (isError || !job) {

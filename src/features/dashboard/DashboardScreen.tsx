@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { ScrollView, View, StyleSheet, Dimensions, Pressable, ActivityIndicator, StatusBar, Image } from 'react-native';
+import { ScrollView, View, StyleSheet, Dimensions, Pressable, StatusBar, Image } from 'react-native';
 import { Text, Card, IconButton, useTheme, Divider, Button, Surface, MD3Theme } from 'react-native-paper';
 import { useNavigation, NavigationProp, CommonActions } from '@react-navigation/native';
 import styled from 'styled-components/native';
@@ -9,6 +9,7 @@ import { useGetMyJobsQuery } from '@features/worker/workerApiSlice';
 import { LOGO_IMAGE } from '@assets/images';
 import { User } from '@types';
 import { updateJobsTabParams } from '@navigation/BottomTabNavigator';
+import { DashboardSkeleton } from '@components/SkeletonLoader';
 
 
 
@@ -48,7 +49,7 @@ const DashboardScreen = () => {
   }, []);
 
   if (isLoadingJobs || isLoadingUser) {
-    return <CenteredContainer><ActivityIndicator animating={true} size="large" /></CenteredContainer>;
+    return <DashboardSkeleton />;
   }
 
   if (isError) {

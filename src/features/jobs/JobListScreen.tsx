@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { FlatList, View, StyleSheet, ActivityIndicator, Image, StatusBar } from 'react-native';
+import { FlatList, View, StyleSheet, Image, StatusBar } from 'react-native';
 import { Text, SegmentedButtons, useTheme, MD3Theme } from 'react-native-paper';
 import { useRoute, RouteProp } from '@react-navigation/native';
 import styled from 'styled-components/native';
@@ -8,6 +8,7 @@ import JobCard from './components/JobCard';
 import { useListJobsQuery } from './jobApiSlice';
 import { RootStackParamList } from '../../types/navigation';
 import { LOGO_IMAGE } from '@assets/images';
+import { ListSkeleton } from '@components/SkeletonLoader';
 
 type JobListScreenRouteProp = RouteProp<RootStackParamList, 'JobList'>;
 
@@ -26,7 +27,7 @@ const JobListScreen = () => {
   }, [jobsResponse, selectedSegment]);
 
   if (isLoading) {
-    return <CenteredContainer><ActivityIndicator animating={true} size="large" /></CenteredContainer>;
+    return <CenteredContainer><ListSkeleton items={5} /></CenteredContainer>;
   }
 
 

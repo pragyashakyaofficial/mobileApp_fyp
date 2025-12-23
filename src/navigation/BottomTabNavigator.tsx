@@ -19,10 +19,10 @@ const BottomTabNavigator = () => {
           let iconColor = color;
 
           if (focused) {
-            iconSize = size * 1.15;
+            iconSize = size * 1.25;
             iconColor = '#4A6FA5';
           } else {
-            iconColor = '#63acceff';
+            iconColor = '#6eb6d8ff';
           }
 
           if (route.name === 'DashboardTab') {
@@ -36,12 +36,12 @@ const BottomTabNavigator = () => {
           return <MaterialCommunityIcons name={iconName} size={iconSize} color={iconColor} />;
         },
         tabBarActiveTintColor: '#4A6FA5',
-        tabBarInactiveTintColor: '#63acceff',
+        tabBarInactiveTintColor: '#6eb6d8ff',
         tabBarLabelStyle: ({ focused }) => ({
           fontSize: 12,
           fontWeight: focused ? '600' : '400',
-          marginBottom: focused ? 4 : 2,
-          transform: [{ scale: focused ? 1.05 : 1 }],
+          marginBottom: focused ? 8 : 6,
+          transform: [{ scale: focused ? 1.15 : 1 }],
         }),
         tabBarStyle: {
           backgroundColor: '#ffffff',
