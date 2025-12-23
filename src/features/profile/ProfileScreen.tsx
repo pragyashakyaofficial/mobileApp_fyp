@@ -10,23 +10,30 @@ import {
   IconButton,
   useTheme,
   Text,
-  Divider
+  Divider,
+  Button
 } from 'react-native-paper';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { NavigationProp, useNavigation } from '@react-navigation/native';
+import { useDispatch } from 'react-redux';
 import styled from 'styled-components/native';
 
 import { User } from '@types';
 import { LOGO_IMAGE } from '@assets/images';
 import { RootStackParamList } from '../../types/navigation';
+import { useLogoutMutation } from '../auth/authApiSlice';
+import { logout } from '../auth/authSlice';
 
 const ProfileScreen = () => {
   const theme = useTheme();
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
+  const dispatch = useDispatch();
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isNotificationsEnabled, setIsNotificationsEnabled] = useState(false);
   const [isLocationSharingEnabled, setIsLocationSharingEnabled] = useState(false);
+  
+  const [logoutMutation, { isLoading: isLoggingOut }] = useLogoutMutation();
 
   useEffect(() => {
     const loadUserData = async () => {
@@ -51,6 +58,44 @@ const ProfileScreen = () => {
 
   const handleAddSkills = () => {
     navigation.navigate('AddSkills');
+  };
+
+  const handleLogout = () => {
+    Alert.alert(
+      'Logout',
+      'Are you sure you want to logout?',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Logout',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await logoutMutation(null).unwrap();
+              // Navigation will be handled automatically by auth state change
+              // But we can also add explicit navigation as backup
+              setTimeout(() => {
+                navigation.reset({
+                  index: 0,
+                  routes: [{ name: 'Login' }],
+                });
+              }, 100);
+            } catch (error) {
+              console.error('Logout error:', error);
+              // Even if there's an error, the user will be logged out due to the onQueryStarted handler
+              // Add explicit navigation as backup
+              navigation.reset({
+                index: 0,
+                routes: [{ name: 'Login' }],
+              });
+            }
+          },
+        },
+      ]
+    );
   };
 
   if (isLoading) {
@@ -162,40 +207,50 @@ const ProfileScreen = () => {
           </Card.Content>
         </Card>
 
-         {/* <Card style={[styles.card, { backgroundColor: theme.colors.onPrimary, borderColor: '#000',
-          borderWidth: 0.5, }]}
-          >
-          <Card.Content>
+         <Card style={[styles.card, styles.smallCard, { 
+          backgroundColor: theme.colors.onPrimary, 
+          borderColor: theme.colors.secondary,
+          borderWidth: 0.5, 
+        }]}>
+          <Card.Content style={styles.smallCardContent}>
             <List.Item
               title="Add Skills & Expertise"
               description="Add or update your skills"
               left={props => <List.Icon {...props} icon="plus-circle-outline" color={theme.colors.primary} />}
-              right={props => <List.Icon {...props} icon="chevron-right" />}
+              right={props => <List.Icon {...props} icon="chevron-right" color={theme.colors.primary} />}
               onPress={handleAddSkills}
               style={styles.listItem}
               titleStyle={[styles.listItemTitle, { color: theme.colors.secondary }]}
-              descriptionStyle={{ color: theme.colors.secondary }}
+              descriptionStyle={{ color: theme.colors.secondary, fontSize: 12 }}
             />
           </Card.Content>
-        </Card> */}
-        <Card style={[styles.card, styles.smallCard, { 
-  backgroundColor: theme.colors.onPrimary, 
-  borderColor: theme.colors.secondary,
-  borderWidth: 0.5, 
-}]}>
-  <Card.Content style={styles.smallCardContent}>
-    <List.Item
-      title="Add Skills & Expertise"
-      description="Add or update your skills"
-      left={props => <List.Icon {...props} icon="plus-circle-outline" color={theme.colors.primary} />}
-      right={props => <List.Icon {...props} icon="chevron-right" color={theme.colors.primary} />}
-      onPress={handleAddSkills}
-      style={styles.listItem}
-      titleStyle={[styles.listItemTitle, { color: theme.colors.secondary }]}
-      descriptionStyle={{ color: theme.colors.secondary, fontSize: 12 }}
-    />
-  </Card.Content>
-</Card>
+        </Card>
+        
+        {/* Pretty Logout Button */}
+        <View style={styles.logoutContainer}>
+          {/* <Card style={[styles.logoutCard, { 
+            backgroundColor: theme.colors.onPrimary,
+            borderColor: theme.colors.accent,
+          }]}>
+            <Card.Content style={styles.logoutCardContent}> */}
+              <Button
+                mode="outlined"
+                onPress={handleLogout}
+                loading={isLoggingOut}
+                disabled={isLoggingOut}
+                style={styles.logoutButton}
+                contentStyle={styles.logoutButtonContent}
+                labelStyle={styles.logoutButtonLabel}
+                icon="logout-variant"
+              >
+                {isLoggingOut ? 'Logging Out...' : 'Logout'}
+              </Button>
+              {/* <Text style={[styles.logoutWarning, { color: theme.colors.secondary }]}>
+                You'll be signed out from all devices
+              </Text> */}
+            {/* </Card.Content>
+          </Card> */}
+        </View>
       </ScrollView>
     </Container>
   );
@@ -246,10 +301,8 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0,
     shadowRadius: 0,
-    // borderColor: '#000',
-    // borderWidth: 0.20,
   },
-    smallCard: {
+  smallCard: {
     padding: 0,
     marginHorizontal: 16,
     marginBottom: 16,
@@ -357,6 +410,48 @@ const styles = StyleSheet.create({
   },
   divider: {
     marginVertical: 4,
+  },
+  logoutContainer: {
+    paddingHorizontal: 16,
+    marginBottom: 32,
+    marginTop: 8,
+  },
+  logoutCard: {
+    borderRadius: 12,
+    borderWidth: 0.2,
+    borderColor: '#000',
+    elevation: 0,
+    shadowColor: 'transparent',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0,
+    shadowRadius: 0,
+  },
+  logoutCardContent: {
+    paddingVertical: 16,
+    paddingHorizontal: 16,
+    alignItems: 'center',
+  },
+  logoutButton: {
+    borderRadius: 8,
+    borderWidth: 0.5,
+    borderColor: '#4A6FA5',
+    width: '100%',
+  },
+  logoutButtonContent: {
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+  },
+  logoutButtonLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    letterSpacing: 0.5,
+  },
+  logoutWarning: {
+    fontSize: 12,
+    textAlign: 'center',
+    marginTop: 12,
+    fontStyle: 'italic',
+    opacity: 0.8,
   },
 });
 

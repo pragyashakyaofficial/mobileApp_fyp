@@ -12,7 +12,6 @@ import { RootStackParamList } from '../../types/navigation';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import { LOGO_IMAGE } from '@assets/images';
 
-// Enhanced validation schema
 const FormSchema = z.object({
   email: z
     .string()

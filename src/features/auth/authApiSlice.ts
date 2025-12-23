@@ -1,5 +1,5 @@
 import { apiSlice } from '@api/apiSlice';
-import { setCredentials } from './authSlice';
+import { setCredentials, logout } from './authSlice';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export const authApiSlice = apiSlice.injectEndpoints({
@@ -51,8 +51,28 @@ export const authApiSlice = apiSlice.injectEndpoints({
                 console.error('Registration failed:', error);
             }
         }
+    }),
+    logout: builder.mutation({
+      query: () => ({
+        url: '/auth/logout',
+        method: 'POST',
+      }),
+      async onQueryStarted(arg, { dispatch, queryFulfilled }) {
+        try {
+          await queryFulfilled;
+          // Clear AsyncStorage
+          await AsyncStorage.multiRemove(['user', 'token']);
+          // Dispatch logout action to clear Redux state
+          dispatch(logout());
+        } catch (error) {
+          console.error('Logout failed:', error);
+          // Even if API call fails, clear local storage and Redux state
+          await AsyncStorage.multiRemove(['user', 'token']);
+          dispatch(logout());
+        }
+      },
     })
   }),
 });
 
-export const { useLoginMutation, useRegisterMutation } = authApiSlice;
+export const { useLoginMutation, useRegisterMutation, useLogoutMutation } = authApiSlice;
