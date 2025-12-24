@@ -248,12 +248,12 @@ if (skills.length === 0) {
       value: '95%',
       icon: 'chart-line' 
     },
-    { 
-      title: 'Current Rating', 
-      // value: profileData?.rating?.toString() + ' ★' || displayUser?.rating?.toString() + ' ★' || '4.5 ★', 
-      value: '4.5 ★',
-      icon: 'star' 
-    },
+    // { 
+    //   title: 'Current Rating', 
+    //   // value: profileData?.rating?.toString() + ' ★' || displayUser?.rating?.toString() + ' ★' || '4.5 ★', 
+    //   value: '4.5 ★',
+    //   icon: 'star' 
+    // },
   ];
 
   const personalInfo = [

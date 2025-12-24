@@ -14,7 +14,7 @@ import styled from 'styled-components/native';
 import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 import { RouteProp, useRoute, useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { useGetJobDetailsQuery } from './jobApiSlice';
+import { useGetJobDetailsQuery, useStartJobMutation, useCompleteJobMutation } from './jobApiSlice';
 import { format } from 'date-fns';
 
 type RootStackParamList = {
@@ -70,6 +70,8 @@ const JobDetailsScreen = () => {
   const { jobId } = route.params;
 
   const { data: job, isLoading, isError, error } = useGetJobDetailsQuery(jobId);
+  const [startJob, { isLoading: isStartingJob }] = useStartJobMutation();
+  const [completeJob, { isLoading: isCompletingJob }] = useCompleteJobMutation();
 
   const formatShortDate = (dateString: string | null) => {
     if (!dateString) return 'N/A';
@@ -108,13 +110,38 @@ const JobDetailsScreen = () => {
     return configs[status] || { label: status, color: '#9E9E9E', icon: 'help-circle-outline' };
   };
 
+  const handleStartJob = () => {
+    Alert.alert(
+      'Start Job',
+      'Begin working on this job?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { 
+          text: 'Start Job', 
+          onPress: async () => {
+            try {
+              await startJob(jobId).unwrap();
+              Alert.alert('Success', 'Job started successfully!');
+            } catch (error) {
+              Alert.alert('Error', 'Failed to start job. Please try again.');
+            }
+          }
+        }
+      ]
+    );
+  };
+
   const handleNavigate = () => {
-    if (job?.location_lat && job?.location_lng) {
+    if (job && job.location_lat && job.location_lng) {
       const url = `https://www.google.com/maps/search/?api=1&query=${job.location_lat},${job.location_lng}`;
       Linking.openURL(url).catch(err => 
         Alert.alert('Navigation Error', 'Could not open maps application')
       );
     }
+  };
+
+  const handleCompleteJob = () => {
+    navigation.navigate('JobCompletion', { jobId: job.id.toString() });
   };
 
   if (isLoading) {
@@ -226,19 +253,12 @@ const JobDetailsScreen = () => {
               {job.status === 'pending' && (
                 <ActionButton
                   mode="contained"
-                  onPress={() => {
-                    Alert.alert(
-                      'Start Job',
-                      'Begin working on this job?',
-                      [
-                        { text: 'Cancel', style: 'cancel' },
-                        { text: 'Start Job', onPress: () => {/* API call */} }
-                      ]
-                    );
-                  }}
+                  onPress={handleStartJob}
                   icon="play-circle-outline"
                   style={{ flex: 1, marginRight: 8 }}
                   contentStyle={{ height: 44 }}
+                  disabled={isStartingJob}
+                  loading={isStartingJob}
                 >
                   Start Job
                 </ActionButton>
@@ -247,10 +267,12 @@ const JobDetailsScreen = () => {
               {job.status === 'in_progress' && (
                 <ActionButton
                   mode="contained"
-                  onPress={() => navigation.navigate('JobCompletion', { jobId: job.id.toString() })}
+                  onPress={handleCompleteJob}
                   icon="check-circle-outline"
                   style={{ flex: 1, marginRight: 8 }}
                   contentStyle={{ height: 44 }}
+                  disabled={isCompletingJob}
+                  loading={isCompletingJob}
                 >
                   Mark Complete
                 </ActionButton>

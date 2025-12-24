@@ -57,7 +57,46 @@ export const jobApiSlice = apiSlice.injectEndpoints({
         }
       },
     }),
+    startJob: builder.mutation<Job, string>({
+      query: (jobId) => {
+        console.log(`Calling POST /api/worker/jobs/${jobId}/start`);
+        return {
+          url: `/worker/jobs/${jobId}/start`,
+          method: 'POST',
+        };
+      },
+      invalidatesTags: (result, error, id) => [{ type: 'Job', id }],
+      async onQueryStarted(arg, { queryFulfilled }) {
+        try {
+          const { data } = await queryFulfilled;
+          console.log(`Response from POST /api/worker/jobs/${arg}/start:`, JSON.stringify(data, null, 2));
+        } catch (err) {
+          console.error(`Error in POST /api/worker/jobs/${arg}/start:`, err);
+        }
+      },
+    }),
+    completeJob: builder.mutation<Job, { jobId: string; notes?: string }>({
+      query: ({ jobId, notes }) => {
+        console.log(`Calling POST /api/worker/jobs/${jobId}/complete with payload:`, { notes });
+        return {
+          url: `/worker/jobs/${jobId}/complete`,
+          method: 'POST',
+          body: {
+            notes,
+          },
+        };
+      },
+      invalidatesTags: (result, error, { jobId }) => [{ type: 'Job', id: jobId }],
+      async onQueryStarted(arg, { queryFulfilled }) {
+        try {
+          const { data } = await queryFulfilled;
+          console.log(`Response from POST /api/worker/jobs/${arg.jobId}/complete:`, JSON.stringify(data, null, 2));
+        } catch (err) {
+          console.error(`Error in POST /api/worker/jobs/${arg.jobId}/complete:`, err);
+        }
+      },
+    }),
   }),
 });
 
-export const { useGetJobDetailsQuery, useListJobsQuery, useCreateJobMutation } = jobApiSlice;
+export const { useGetJobDetailsQuery, useListJobsQuery, useCreateJobMutation, useStartJobMutation, useCompleteJobMutation } = jobApiSlice;
