@@ -1,10 +1,8 @@
 import React from 'react';
-import { ScrollView, Alert, Linking, Dimensions, View } from 'react-native';
+import { ScrollView, Alert, Linking, Dimensions, View, StatusBar } from 'react-native';
 import { 
   Button, 
   Card, 
-  Title, 
-  Paragraph, 
   Chip, 
   IconButton, 
   useTheme, 
@@ -73,15 +71,6 @@ const JobDetailsScreen = () => {
 
   const { data: job, isLoading, isError, error } = useGetJobDetailsQuery(jobId);
 
-  const formatDate = (dateString: string | null) => {
-    if (!dateString) return 'Not set';
-    try {
-      return format(new Date(dateString), 'PPpp');
-    } catch {
-      return 'Invalid date';
-    }
-  };
-
   const formatShortDate = (dateString: string | null) => {
     if (!dateString) return 'N/A';
     try {
@@ -132,7 +121,7 @@ const JobDetailsScreen = () => {
     return (
       <Container>
         <LoadingContainer>
-          <ActivityIndicator size="large" color={theme.colors?.primary || '#6200ee'} />
+          <ActivityIndicator size="large" color={theme.colors?.primary || '#4A6FA5'} />
           <LoadingText>Loading job details...</LoadingText>
         </LoadingContainer>
       </Container>
@@ -144,7 +133,7 @@ const JobDetailsScreen = () => {
       <Container>
         <ErrorContainer>
           <ErrorIcon>
-            <IconButton icon="alert-circle-outline" size={64} iconColor={theme.colors?.error || '#d32f2f'} />
+            <IconButton icon="alert-circle-outline" size={48} iconColor={theme.colors?.error || '#d32f2f'} />
           </ErrorIcon>
           <ErrorTitle>Unable to Load Job</ErrorTitle>
           <ErrorDescription>
@@ -157,7 +146,7 @@ const JobDetailsScreen = () => {
           <Button 
             mode="contained" 
             onPress={() => navigation.goBack()}
-            style={{ marginTop: 20 }}
+            style={{ marginTop: 16 }}
             icon="arrow-left"
           >
             Return to Jobs
@@ -172,12 +161,14 @@ const JobDetailsScreen = () => {
 
   return (
     <Container showsVerticalScrollIndicator={false}>
+      <StatusBar backgroundColor="#4A6FA5" barStyle="light-content" />
+      
       {/* Top Header with Back Button, Job Number, and Status */}
       <TopHeader>
         <BackButtonContainer>
           <IconButton
             icon="arrow-left"
-            size={28}
+            size={24}
             iconColor="#FFFFFF"
             onPress={() => navigation.goBack()}
           />
@@ -199,29 +190,25 @@ const JobDetailsScreen = () => {
         <HeroContent>
           <JobTitle>{job.title}</JobTitle>
           
-          <JobDescription numberOfLines={3}>
-            {job.description || 'No description provided'}
-          </JobDescription>
-          
           {/* Date, Budget, Priority in single row */}
           <InfoRow>
             <InfoItem>
               <InfoIcon>
-                <IconButton icon="calendar-clock" size={20} iconColor="#FFFFFF" />
+                <IconButton icon="calendar-clock" size={16} iconColor="#FFFFFF" />
               </InfoIcon>
               <InfoText>{formatShortDate(job.scheduled_start)}</InfoText>
             </InfoItem>
             
             <InfoItem>
               <InfoIcon>
-                <IconButton icon="cash" size={20} iconColor="#FFFFFF" />
+                <IconButton icon="cash" size={16} iconColor="#FFFFFF" />
               </InfoIcon>
               <InfoText>{formatCurrency(job.budget)}</InfoText>
             </InfoItem>
             
             <InfoItem>
               <InfoIcon>
-                <IconButton icon={priorityConfig.icon} size={20} iconColor="#FFFFFF" />
+                <IconButton icon={priorityConfig.icon} size={16} iconColor="#FFFFFF" />
               </InfoIcon>
               <InfoText>{priorityConfig.label}</InfoText>
             </InfoItem>
@@ -233,12 +220,8 @@ const JobDetailsScreen = () => {
       <ContentWrapper>
         {/* Quick Actions - Start and Navigate in single row */}
         <QuickActionsCard>
+          <DetailTitle style={{ marginLeft: 18, marginTop: 12 }}>Quick Actions</DetailTitle>
           <CardContent>
-            <SectionHeader>
-              <IconButton icon="lightning-bolt-outline" size={24} iconColor={theme.colors?.primary || '#6200ee'} />
-              <SectionTitle>Quick Actions</SectionTitle>
-            </SectionHeader>
-            
             <ActionsRow>
               {job.status === 'pending' && (
                 <ActionButton
@@ -255,7 +238,7 @@ const JobDetailsScreen = () => {
                   }}
                   icon="play-circle-outline"
                   style={{ flex: 1, marginRight: 8 }}
-                  contentStyle={{ height: 48 }}
+                  contentStyle={{ height: 44 }}
                 >
                   Start Job
                 </ActionButton>
@@ -267,7 +250,7 @@ const JobDetailsScreen = () => {
                   onPress={() => navigation.navigate('JobCompletion', { jobId: job.id.toString() })}
                   icon="check-circle-outline"
                   style={{ flex: 1, marginRight: 8 }}
-                  contentStyle={{ height: 48 }}
+                  contentStyle={{ height: 44 }}
                 >
                   Mark Complete
                 </ActionButton>
@@ -278,7 +261,7 @@ const JobDetailsScreen = () => {
                 onPress={handleNavigate}
                 icon="map-marker-radius"
                 style={{ flex: 1 }}
-                contentStyle={{ height: 48 }}
+                contentStyle={{ height: 44 }}
               >
                 Navigate
               </SecondaryButton>
@@ -286,12 +269,14 @@ const JobDetailsScreen = () => {
           </CardContent>
         </QuickActionsCard>
 
+       
+
         {/* Room Details */}
-        <DetailCard fullWidth>
+        <DetailCard>
           <CardContent>
             <DetailHeader>
               <DetailIconContainer style={{ backgroundColor: '#E8F5E9' }}>
-                <IconButton icon="home-outline" size={24} iconColor="#4CAF50" />
+                <IconButton icon="home-outline" size={20} iconColor="#4CAF50" />
               </DetailIconContainer>
               <DetailTitle>Room Details</DetailTitle>
             </DetailHeader>
@@ -300,73 +285,32 @@ const JobDetailsScreen = () => {
               <DetailLabel>Room Type</DetailLabel>
               <DetailValue>{job.room_type || 'Not specified'}</DetailValue>
             </DetailItem>
-            
-            <DetailItem>
-              <DetailLabel>Priority</DetailLabel>
-              <DetailValue style={{ color: priorityConfig.color }}>
-                {priorityConfig.label}
-              </DetailValue>
-            </DetailItem>
-            
-            <DetailItem>
-              <DetailLabel>Status</DetailLabel>
-              <DetailValue style={{ color: statusConfig.color }}>
-                {statusConfig.label}
-              </DetailValue>
-            </DetailItem>
           </CardContent>
         </DetailCard>
 
-        {/* Schedule */}
-        <DetailCard fullWidth>
+
+         {/* Job Description Container */}
+        <DescriptionCard>
           <CardContent>
-            <DetailHeader>
+            <DescriptionHeader>
               <DetailIconContainer style={{ backgroundColor: '#E3F2FD' }}>
-                <IconButton icon="calendar-range" size={24} iconColor="#2196F3" />
+                <IconButton icon="text-box-outline" size={20} iconColor="#2196F3" />
               </DetailIconContainer>
-              <DetailTitle>Schedule</DetailTitle>
-            </DetailHeader>
+              <DetailTitle>Description</DetailTitle>
+            </DescriptionHeader>
             
-            <ScheduleItem>
-              <ScheduleIcon>
-                <IconButton icon="calendar-start" size={20} iconColor="#666" />
-              </ScheduleIcon>
-              <ScheduleInfo>
-                <ScheduleLabel>Start Date</ScheduleLabel>
-                <ScheduleValue>{formatDateOnly(job.scheduled_start)}</ScheduleValue>
-              </ScheduleInfo>
-            </ScheduleItem>
-            
-            <ScheduleItem>
-              <ScheduleIcon>
-                <IconButton icon="calendar-end" size={20} iconColor="#666" />
-              </ScheduleIcon>
-              <ScheduleInfo>
-                <ScheduleLabel>End Date</ScheduleLabel>
-                <ScheduleValue>{formatDateOnly(job.scheduled_end)}</ScheduleValue>
-              </ScheduleInfo>
-            </ScheduleItem>
-            
-            <ScheduleItem>
-              <ScheduleIcon>
-                <IconButton icon="clock-outline" size={20} iconColor="#666" />
-              </ScheduleIcon>
-              <ScheduleInfo>
-                <ScheduleLabel>Budget</ScheduleLabel>
-                <ScheduleValue style={{ color: '#4CAF50', fontWeight: '600' }}>
-                  {formatCurrency(job.budget)}
-                </ScheduleValue>
-              </ScheduleInfo>
-            </ScheduleItem>
+            <DescriptionText>
+              {job.description || 'No description provided'}
+            </DescriptionText>
           </CardContent>
-        </DetailCard>
+        </DescriptionCard>
 
         {/* Team Section - Both in single row */}
-        <DetailCard fullWidth>
+        <DetailCard>
           <CardContent>
             <DetailHeader>
               <DetailIconContainer style={{ backgroundColor: '#F3E5F5' }}>
-                <IconButton icon="account-group" size={24} iconColor="#9C27B0" />
+                <IconButton icon="account-group" size={20} iconColor="#9C27B0" />
               </DetailIconContainer>
               <DetailTitle>Team</DetailTitle>
             </DetailHeader>
@@ -375,9 +319,9 @@ const JobDetailsScreen = () => {
               <TeamMember>
                 <MemberAvatar>
                   <Avatar.Text 
-                    size={48} 
+                    size={40} 
                     label={getInitials(job.designer.name)}
-                    style={{ backgroundColor: '#6366F1' }}
+                    style={{ backgroundColor: '#4A6FA5' }}
                   />
                 </MemberAvatar>
                 <MemberInfo>
@@ -390,7 +334,7 @@ const JobDetailsScreen = () => {
                 <TeamMember>
                   <MemberAvatar>
                     <Avatar.Text 
-                      size={48} 
+                      size={40} 
                       label={getInitials(job.worker.name)}
                       style={{ backgroundColor: '#10B981' }}
                     />
@@ -405,13 +349,71 @@ const JobDetailsScreen = () => {
           </CardContent>
         </DetailCard>
 
+        {/* Schedule */}
+        <DetailCard>
+          <CardContent>
+            <DetailHeader>
+              <DetailIconContainer style={{ backgroundColor: '#E3F2FD' }}>
+                <IconButton icon="calendar-range" size={20} iconColor="#2196F3" />
+              </DetailIconContainer>
+              <DetailTitle>Schedule</DetailTitle>
+            </DetailHeader>
+            
+            <ScheduleGrid>
+              <ScheduleColumn>
+                <ScheduleItem>
+                  <ScheduleIcon>
+                    <IconButton icon="calendar" size={16} iconColor="#666" />
+                  </ScheduleIcon>
+                  <ScheduleInfo>
+                    <ScheduleLabel>Start Date</ScheduleLabel>
+                    <ScheduleValue>{formatDateOnly(job.scheduled_start)}</ScheduleValue>
+                  </ScheduleInfo>
+                </ScheduleItem>
+                
+                <ScheduleItem>
+                  <ScheduleIcon>
+                    <IconButton icon="clock-outline" size={16} iconColor="#666" />
+                  </ScheduleIcon>
+                  <ScheduleInfo>
+                    <ScheduleLabel>Start Time</ScheduleLabel>
+                    <ScheduleValue>{formatTime(job.scheduled_start)}</ScheduleValue>
+                  </ScheduleInfo>
+                </ScheduleItem>
+              </ScheduleColumn>
+              
+              <ScheduleColumn>
+                <ScheduleItem>
+                  <ScheduleIcon>
+                    <IconButton icon="calendar" size={16} iconColor="#666" />
+                  </ScheduleIcon>
+                  <ScheduleInfo>
+                    <ScheduleLabel>End Date</ScheduleLabel>
+                    <ScheduleValue>{formatDateOnly(job.scheduled_end)}</ScheduleValue>
+                  </ScheduleInfo>
+                </ScheduleItem>
+                
+                <ScheduleItem>
+                  <ScheduleIcon>
+                    <IconButton icon="clock-outline" size={16} iconColor="#666" />
+                  </ScheduleIcon>
+                  <ScheduleInfo>
+                    <ScheduleLabel>End Time</ScheduleLabel>
+                    <ScheduleValue>{formatTime(job.scheduled_end)}</ScheduleValue>
+                  </ScheduleInfo>
+                </ScheduleItem>
+              </ScheduleColumn>
+            </ScheduleGrid>
+          </CardContent>
+        </DetailCard>
+
         {/* Skills Section - Bullet listed */}
         {job.skills && job.skills.length > 0 && (
-          <DetailCard fullWidth>
+          <DetailCard>
             <CardContent>
               <DetailHeader>
                 <DetailIconContainer style={{ backgroundColor: '#FFF3E0' }}>
-                  <IconButton icon="tools" size={24} iconColor="#FF9800" />
+                  <IconButton icon="tools" size={20} iconColor="#FF9800" />
                 </DetailIconContainer>
                 <DetailTitle>Required Skills</DetailTitle>
               </DetailHeader>
@@ -427,79 +429,6 @@ const JobDetailsScreen = () => {
             </CardContent>
           </DetailCard>
         )}
-
-        {/* Job Information - Dates and Times */}
-        <DetailCard fullWidth>
-          <CardContent>
-            <DetailHeader>
-              <DetailIconContainer style={{ backgroundColor: '#ECEFF1' }}>
-                <IconButton icon="information-outline" size={24} iconColor="#607D8B" />
-              </DetailIconContainer>
-              <DetailTitle>Job Information</DetailTitle>
-            </DetailHeader>
-            
-            <InfoGrid>
-              {/* Start Date and Time */}
-              <InfoColumn>
-                <InfoItemSmall>
-                  <InfoIconSmall>
-                    <IconButton icon="calendar" size={16} iconColor="#666" />
-                  </InfoIconSmall>
-                  <InfoContent>
-                    <InfoLabelSmall>Start Date</InfoLabelSmall>
-                    <InfoValueSmall>{formatDateOnly(job.scheduled_start)}</InfoValueSmall>
-                  </InfoContent>
-                </InfoItemSmall>
-                
-                <InfoItemSmall>
-                  <InfoIconSmall>
-                    <IconButton icon="clock-outline" size={16} iconColor="#666" />
-                  </InfoIconSmall>
-                  <InfoContent>
-                    <InfoLabelSmall>Start Time</InfoLabelSmall>
-                    <InfoValueSmall>{formatTime(job.scheduled_start)}</InfoValueSmall>
-                  </InfoContent>
-                </InfoItemSmall>
-              </InfoColumn>
-              
-              {/* End Date and Time */}
-              <InfoColumn>
-                <InfoItemSmall>
-                  <InfoIconSmall>
-                    <IconButton icon="calendar" size={16} iconColor="#666" />
-                  </InfoIconSmall>
-                  <InfoContent>
-                    <InfoLabelSmall>End Date</InfoLabelSmall>
-                    <InfoValueSmall>{formatDateOnly(job.scheduled_end)}</InfoValueSmall>
-                  </InfoContent>
-                </InfoItemSmall>
-                
-                <InfoItemSmall>
-                  <InfoIconSmall>
-                    <IconButton icon="clock-outline" size={16} iconColor="#666" />
-                  </InfoIconSmall>
-                  <InfoContent>
-                    <InfoLabelSmall>End Time</InfoLabelSmall>
-                    <InfoValueSmall>{formatTime(job.scheduled_end)}</InfoValueSmall>
-                  </InfoContent>
-                </InfoItemSmall>
-              </InfoColumn>
-            </InfoGrid>
-            
-            {/* Additional Metadata */}
-            {/* <MetadataRow>
-              <MetadataItem>
-                <MetaLabel>Job ID</MetaLabel>
-                <MetaValue>#{job.id}</MetaValue>
-              </MetadataItem>
-              
-              <MetadataItem>
-                <MetaLabel>Created</MetaLabel>
-                <MetaValue>{formatShortDate(job.created_at)}</MetaValue>
-              </MetadataItem>
-            </MetadataRow> */}
-          </CardContent>
-        </DetailCard>
       </ContentWrapper>
     </Container>
   );
@@ -516,8 +445,8 @@ const TopHeader = styled.View`
   flex-direction: row;
   align-items: center;
   justify-content: space-between;
-  padding: 16px;
-  background-color: #6366F1;
+  padding: 12px 16px;
+  background-color: #4A6FA5;
   z-index: 10;
 `;
 
@@ -530,55 +459,48 @@ const JobNumberContainer = styled.View`
 
 const JobNumberText = styled(Text)`
   color: #FFFFFF;
-  font-size: 20px;
+  font-size: 18px;
   font-weight: 700;
 `;
 
 const StatusContainer = styled.View``;
 
 const StatusChip = styled.View`
-  padding-horizontal: 12px;
-  padding-vertical: 6px;
-  border-radius: 16px;
-  min-width: 80px;
+  padding-horizontal: 10px;
+  padding-vertical: 4px;
+  border-radius: 12px;
+  min-width: 70px;
   align-items: center;
   justify-content: center;
 `;
 
 const StatusText = styled(Text)`
   color: #FFFFFF;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 600;
 `;
 
 // Hero Header
 const HeroHeader = styled.View`
-  background-color: #6366F1;
-  padding: 24px 16px;
+  background-color: #4A6FA5;
+  padding: 16px;
 `;
 
 const HeroContent = styled.View``;
 
 const JobTitle = styled(Text)`
   color: #FFFFFF;
-  font-size: 24px;
+  font-size: 20px;
   font-weight: 700;
-  margin-bottom: 12px;
-`;
-
-const JobDescription = styled(Text)`
-  color: rgba(255, 255, 255, 0.9);
-  font-size: 16px;
-  line-height: 24px;
-  margin-bottom: 20px;
+  margin-bottom: 16px;
 `;
 
 const InfoRow = styled.View`
   flex-direction: row;
   justify-content: space-between;
   background-color: rgba(255, 255, 255, 0.1);
-  border-radius: 12px;
-  padding: 12px;
+  border-radius: 8px;
+  padding: 10px;
 `;
 
 const InfoItem = styled.View`
@@ -592,39 +514,46 @@ const InfoIcon = styled.View`
 
 const InfoText = styled(Text)`
   color: #FFFFFF;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 500;
   text-align: center;
 `;
 
 // Content Section
 const ContentWrapper = styled.View`
-  padding: 24px 16px;
+  padding: 16px;
   background-color: #F8FAFC;
 `;
 
 const QuickActionsCard = styled(Card)`
   background-color: #FFFFFF;
-  border-radius: 16px;
-  elevation: 4;
-  margin-bottom: 20px;
+  border-radius: 12px;
+  elevation: 2;
+  margin-bottom: 12px;
+`;
+
+// Description Card
+const DescriptionCard = styled(Card)`
+  background-color: #FFFFFF;
+  border-radius: 12px;
+  elevation: 2;
+  margin-bottom: 12px;
 `;
 
 const CardContent = styled.View`
-  padding: 20px;
+  padding: 16px;
 `;
 
-const SectionHeader = styled.View`
+const DescriptionHeader = styled.View`
   flex-direction: row;
   align-items: center;
-  margin-bottom: 20px;
+  margin-bottom: 12px;
 `;
 
-const SectionTitle = styled(Text)`
-  font-size: 18px;
-  font-weight: 700;
+const DescriptionText = styled(Text)`
+  font-size: 14px;
   color: #333;
-  margin-left: 12px;
+  line-height: 20px;
 `;
 
 const ActionsRow = styled.View`
@@ -632,90 +561,55 @@ const ActionsRow = styled.View`
 `;
 
 const ActionButton = styled(Button)`
-  border-radius: 12px;
+  border-radius: 8px;
 `;
 
 const SecondaryButton = styled(Button)`
-  border-radius: 12px;
-  border-width: 2px;
+  border-radius: 8px;
+  border-width: 1px;
 `;
 
 // Detail Cards
 const DetailCard = styled(Card)<DetailCardProps>`
   background-color: #FFFFFF;
-  border-radius: 16px;
-  elevation: 2;
-  margin-bottom: 16px;
+  border-radius: 12px;
+  elevation: 1;
+  margin-bottom: 12px;
 `;
 
 const DetailHeader = styled.View`
   flex-direction: row;
   align-items: center;
-  margin-bottom: 20px;
+  margin-bottom: 16px;
 `;
 
 const DetailIconContainer = styled.View`
-  width: 48px;
-  height: 48px;
-  border-radius: 12px;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
   align-items: center;
   justify-content: center;
 `;
 
 const DetailTitle = styled(Text)`
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 700;
   color: #333;
-  margin-left: 12px;
+  margin-left: 10px;
   flex: 1;
 `;
 
-const DetailItem = styled.View`
-  margin-bottom: 16px;
-`;
+const DetailItem = styled.View``;
 
 const DetailLabel = styled(Text)`
-  font-size: 12px;
+  font-size: 10px;
   color: #666;
   font-weight: 600;
-  margin-bottom: 4px;
+  margin-bottom: 2px;
   text-transform: uppercase;
 `;
 
 const DetailValue = styled(Text)`
-  font-size: 16px;
-  color: #333;
-  font-weight: 500;
-`;
-
-// Schedule Components
-const ScheduleItem = styled.View`
-  flex-direction: row;
-  align-items: center;
-  margin-bottom: 16px;
-`;
-
-const ScheduleIcon = styled.View`
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
-  background-color: #F5F5F5;
-  align-items: center;
-  justify-content: center;
-`;
-
-const ScheduleInfo = styled.View`
-  margin-left: 12px;
-  flex: 1;
-`;
-
-const ScheduleLabel = styled(Text)`
-  font-size: 12px;
-  color: #666;
-  margin-bottom: 2px;
-`;
-
-const ScheduleValue = styled(Text)`
   font-size: 14px;
   color: #333;
   font-weight: 500;
@@ -729,126 +623,98 @@ const TeamRow = styled.View`
 
 const TeamMember = styled.View`
   flex: 1;
+  flex-direction: row;
   align-items: center;
-  padding: 12px;
+  padding: 8px;
   background-color: #F8FAFC;
-  border-radius: 12px;
+  border-radius: 8px;
   margin-right: 8px;
 `;
 
 const MemberAvatar = styled.View`
-  margin-bottom: 8px;
+  margin-right: 8px;
 `;
 
-const MemberInfo = styled.View`
-  align-items: center;
-`;
+const MemberInfo = styled.View``;
 
 const MemberRole = styled(Text)`
-  font-size: 12px;
+  font-size: 10px;
   color: #666;
   font-weight: 600;
-  margin-bottom: 4px;
+  margin-bottom: 2px;
 `;
 
 const MemberName = styled(Text)`
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 600;
   color: #333;
-  text-align: center;
+`;
+
+// Schedule Components
+const ScheduleGrid = styled.View`
+  flex-direction: row;
+`;
+
+const ScheduleColumn = styled.View`
+  flex: 1;
+  margin-right: 12px;
+`;
+
+const ScheduleItem = styled.View`
+  flex-direction: row;
+  align-items: center;
+  margin-bottom: 8px;
+  padding: 6px;
+  background-color: #F5F5F5;
+  border-radius: 6px;
+`;
+
+const ScheduleIcon = styled.View`
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background-color: #FFFFFF;
+  align-items: center;
+  justify-content: center;
+  margin-right: 8px;
+`;
+
+const ScheduleInfo = styled.View`
+  flex: 1;
+`;
+
+const ScheduleLabel = styled(Text)`
+  font-size: 10px;
+  color: #666;
+  margin-bottom: 2px;
+`;
+
+const ScheduleValue = styled(Text)`
+  font-size: 12px;
+  color: #333;
+  font-weight: 500;
 `;
 
 // Skills Components
 const SkillsList = styled.View`
-  margin-top: 8px;
+  margin-top: 4px;
 `;
 
 const SkillItem = styled.View`
   flex-direction: row;
   align-items: center;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
   padding-left: 4px;
 `;
 
 const SkillBullet = styled(Text)`
-  font-size: 16px;
+  font-size: 14px;
   color: #4CAF50;
-  margin-right: 12px;
+  margin-right: 8px;
   font-weight: bold;
 `;
 
 const SkillName = styled(Text)`
-  font-size: 16px;
-  color: #333;
-  font-weight: 500;
-`;
-
-// Job Information Components
-const InfoGrid = styled.View`
-  flex-direction: row;
-  justify-content: space-between;
-  margin-bottom: 20px;
-`;
-
-const InfoColumn = styled.View`
-  flex: 1;
-  margin-right: 16px;
-`;
-
-const InfoItemSmall = styled.View`
-  flex-direction: row;
-  align-items: center;
-  margin-bottom: 12px;
-  padding: 8px;
-  background-color: #F8FAFC;
-  border-radius: 8px;
-`;
-
-const InfoIconSmall = styled.View`
-  margin-right: 8px;
-`;
-
-const InfoContent = styled.View`
-  flex: 1;
-`;
-
-const InfoLabelSmall = styled(Text)`
-  font-size: 11px;
-  color: #666;
-  font-weight: 600;
-  margin-bottom: 2px;
-  text-transform: uppercase;
-`;
-
-const InfoValueSmall = styled(Text)`
-  font-size: 14px;
-  color: #333;
-  font-weight: 500;
-`;
-
-// Metadata Components
-const MetadataRow = styled.View`
-  flex-direction: row;
-  justify-content: space-between;
-  margin-top: 16px;
-  padding-top: 16px;
-  border-top-width: 1px;
-  border-top-color: #E5E7EB;
-`;
-
-const MetadataItem = styled.View`
-  flex: 1;
-`;
-
-const MetaLabel = styled(Text)`
-  font-size: 11px;
-  color: #666;
-  font-weight: 600;
-  margin-bottom: 4px;
-  text-transform: uppercase;
-`;
-
-const MetaValue = styled(Text)`
   font-size: 14px;
   color: #333;
   font-weight: 500;
@@ -859,39 +725,39 @@ const LoadingContainer = styled.View`
   flex: 1;
   align-items: center;
   justify-content: center;
-  padding: 80px 20px;
+  padding: 60px 20px;
 `;
 
 const LoadingText = styled(Text)`
-  margin-top: 16px;
+  margin-top: 12px;
   color: #666;
-  font-size: 16px;
+  font-size: 14px;
 `;
 
 const ErrorContainer = styled.View`
   flex: 1;
   align-items: center;
   justify-content: center;
-  padding: 60px 24px;
+  padding: 40px 20px;
 `;
 
 const ErrorIcon = styled.View`
-  margin-bottom: 24px;
+  margin-bottom: 16px;
 `;
 
 const ErrorTitle = styled(Text)`
-  font-size: 24px;
+  font-size: 20px;
   font-weight: 700;
   color: #333;
-  margin-bottom: 12px;
+  margin-bottom: 8px;
   text-align: center;
 `;
 
 const ErrorDescription = styled(Text)`
-  font-size: 16px;
+  font-size: 14px;
   color: #666;
   text-align: center;
-  line-height: 24px;
+  line-height: 20px;
   margin-bottom: 8px;
 `;
 
