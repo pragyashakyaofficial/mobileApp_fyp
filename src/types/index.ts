@@ -37,11 +37,50 @@ export interface Job {
   scheduled_start: string | null;
   scheduled_end: string | null;
   budget: string | null;
-  status: 'pending' | 'assigned' | 'completed' | 'cancelled';
+  status: 'pending' | 'assigned' | 'completed' | 'cancelled' | 'in_progress';
   created_at: string;
   updated_at: string;
   designer: {
     id: number;
     name: string;
+    email: string;
+    phone: string | null;
+    role: string;
+    fcm_token: string | null;
+    email_verified_at: string | null;
+    created_at: string;
+    updated_at: string;
   };
+  worker: {
+    id: number;
+    name: string;
+    email: string;
+    phone: string | null;
+    role: string;
+    fcm_token: string | null;
+    email_verified_at: string | null;
+    created_at: string;
+    updated_at: string;
+  };
+  skills: Array<{
+    id: number;
+    name: string;
+    pivot: {
+      job_id: number;
+      skill_id: number;
+    };
+  }>;
+  files: Array<{
+    id: number;
+    uploader_id: number;
+    attachable_id: number;
+    attachable_type: string;
+    path: string;
+    filename: string;
+    mime_type: string;
+    size: number;
+    storage_driver: string;
+    created_at: string;
+    updated_at: string;
+  }>;
 }
