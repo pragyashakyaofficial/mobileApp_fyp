@@ -18,13 +18,20 @@ const JobListScreen = () => {
   const route = useRoute<JobListScreenRouteProp>();
   const initialFilter = route.params?.filter || 'Pending';
 
-  const [selectedSegment, setSelectedSegment] = useState<'Pending' | 'Completed'>(initialFilter);
+  const [selectedSegment, setSelectedSegment] = useState<'pending' | 'completed'>(initialFilter === 'Completed' ? 'completed' : 'pending');
   const [refreshing, setRefreshing] = useState(false);
   const { data: jobsResponse, isLoading, isError, error, refetch: refetchJobs } = useListJobsQuery();
 
   const filteredJobs = useMemo(() => {
     const jobs = jobsResponse?.data || [];
-    return jobs.filter(job => job.status === selectedSegment);
+    if (selectedSegment === 'pending') {
+      // Show both pending and assigned jobs
+      return jobs.filter(job => job.status === 'pending' || job.status === 'assigned');
+    } else if (selectedSegment === 'completed') {
+      // Show completed jobs
+      return jobs.filter(job => job.status === 'completed');
+    }
+    return jobs;
   }, [jobsResponse, selectedSegment]);
   
   // Pull-to-refresh handler
@@ -74,26 +81,26 @@ const JobListScreen = () => {
 
         <SegmentedButtons
           value={selectedSegment}
-          onValueChange={(value) => setSelectedSegment(value as 'Pending' | 'Completed')}
+          onValueChange={(value) => setSelectedSegment(value as 'pending' | 'completed')}
           buttons={[
             {
-              value: 'Pending',
+              value: 'pending',
               label: 'Pending',
               style: {
-                backgroundColor: selectedSegment === 'Pending' ? '#4A6FA5' : theme.colors.surface,
+                backgroundColor: selectedSegment === 'pending' ? '#4A6FA5' : theme.colors.surface,
               },
               labelStyle: {
-                color: selectedSegment === 'Pending' ? theme.colors.onSecondary : theme.colors.onSurface,
+                color: selectedSegment === 'pending' ? theme.colors.onSecondary : theme.colors.onSurface,
               },
             },
             {
-              value: 'Completed',
+              value: 'completed',
               label: 'Completed',
               style: {
-                backgroundColor: selectedSegment === 'Completed' ? '#4A6FA5' : theme.colors.surface,
+                backgroundColor: selectedSegment === 'completed' ? '#4A6FA5' : theme.colors.surface,
               },
               labelStyle: {
-                color: selectedSegment === 'Completed' ? theme.colors.onSecondary : theme.colors.onSurface,
+                color: selectedSegment === 'completed' ? theme.colors.onSecondary : theme.colors.onSurface,
               },
             },
           ]}

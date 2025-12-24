@@ -81,9 +81,9 @@ const DashboardScreen = () => {
   const jobsData = jobs?.data || [];
 
   const totalJobsCount = jobsData.length;
-  const pendingCount = jobsData.filter((job) => job.status === 'Pending').length;
-  const completedCount = jobsData.filter((job) => job.status === 'Completed').length;
-  const urgentJobsCount = jobsData.filter((job) => job.priority === 'High' && job.status === 'Pending').length;
+  const pendingCount = jobsData.filter((job) => job.status === 'pending' || job.status === 'assigned').length;
+  const completedCount = jobsData.filter((job) => job.status === 'completed').length;
+  const urgentJobsCount = jobsData.filter((job) => job.priority >= 3 && (job.status === 'pending' || job.status === 'assigned')).length;
 
   const gotoProfile = () => navigation.navigate('Profile');
   const gotoPendingJobs = () => navigation.navigate('JobsTab', { filter: 'Pending' }); // Changed from JobList
@@ -194,7 +194,7 @@ const DashboardScreen = () => {
               <Text style={themedStyles.urgentBadgeText}>Urgent</Text>
             </View>
             <Text style={[themedStyles.jobNumber, { color: theme.colors.accent }]}>{urgentJobsCount}</Text>
-            <Text style={[themedStyles.jobLabel, { color: theme.colors.accent }]}>Pending Jobs</Text>
+            <Text style={[themedStyles.jobLabel, { color: theme.colors.accent }]}>Urgent Pendings</Text>
           </Surface>
         </Pressable>
         <Pressable onPress={gotoPendingJobs}>

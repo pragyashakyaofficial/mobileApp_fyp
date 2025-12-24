@@ -25,18 +25,23 @@ export interface PaginatedResponse<T> {
 }
 
 export interface Job {
-  id: string;
+  id: number;
+  designer_id: number;
+  worker_id: number;
   title: string;
-  client: string;
-  priority: 'High' | 'Medium' | 'Low';
-  status: 'In Progress' | 'Pending' | 'Completed';
-  distance: string;
-  time: string;
-  location: {
-    latitude: number;
-    longitude: number;
-    address: string;
+  description: string;
+  priority: number;
+  room_type: string;
+  location_lat: string;
+  location_lng: string;
+  scheduled_start: string | null;
+  scheduled_end: string | null;
+  budget: string | null;
+  status: 'pending' | 'assigned' | 'completed' | 'cancelled';
+  created_at: string;
+  updated_at: string;
+  designer: {
+    id: number;
+    name: string;
   };
-  materials: string[];
-  images: string[];
 }

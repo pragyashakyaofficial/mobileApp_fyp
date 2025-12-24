@@ -8,7 +8,7 @@ import { RootStackParamList } from '../../../types/navigation';
 
 interface JobCardProps {
   job: Job;
-  selectedStatus: 'Pending' | 'Completed';
+  selectedStatus: 'pending' | 'completed';
 }
 
 const JobCard: React.FC<JobCardProps> = ({ job, selectedStatus }) => {
@@ -16,14 +16,14 @@ const JobCard: React.FC<JobCardProps> = ({ job, selectedStatus }) => {
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
 
   const handlePress = () => {
-    navigation.navigate('JobDetails', { jobId: job.id });
+    navigation.navigate('JobDetails', { jobId: job.id.toString() });
   };
 
-  const isPending = selectedStatus === 'Pending';
+  const isPending = selectedStatus === 'pending';
   const icon = isPending ? 'alert-circle-outline' : 'check-circle-outline';
   const iconContainerColor = isPending ? theme.colors.primary : theme.colors.secondary;
 
-  const timeStatus = job.priority === 'High' ? 'Urgent' : 'Minor';
+  const timeStatus = job.priority >= 3 ? 'Urgent' : 'Minor';
 
   const getStatusBackgroundColor = (status: string) => {
     return status === 'Urgent' ? theme.colors.errorContainer : theme.colors.primaryContainer;
@@ -38,7 +38,7 @@ const JobCard: React.FC<JobCardProps> = ({ job, selectedStatus }) => {
       <StyledCard onPress={handlePress}>
         <Card.Title
           title={job.title}
-          subtitle={`Address: ${job.location.address}`}
+          subtitle={`Room: ${job.room_type || 'Not specified'}`}
           left={(props) => (
             <Avatar.Icon
               {...props}

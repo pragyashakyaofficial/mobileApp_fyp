@@ -37,7 +37,8 @@ const JobDetailsScreen = () => {
   return (
     <Container>
       <Title>{job.title}</Title>
-      <Paragraph>{job.client}</Paragraph>
+      <Paragraph>Designer: {job.designer.name}</Paragraph>
+      <Paragraph>Room Type: {job.room_type}</Paragraph>
 
       {/* TODO: Handle multiple images */}
       <Card>
@@ -75,7 +76,7 @@ const JobDetailsScreen = () => {
       <Button mode="outlined" onPress={() => { /* TODO: Start Job */ }}>
         Start Job
       </Button>
-      <Button mode="contained" onPress={() => navigation.navigate('JobCompletion', { jobId: job.id })} style={{ marginTop: 8 }}>
+      <Button mode="contained" onPress={() => navigation.navigate('JobCompletion', { jobId: job.id.toString() })} style={{ marginTop: 8 }}>
         Mark Complete
       </Button>
     </Container>
