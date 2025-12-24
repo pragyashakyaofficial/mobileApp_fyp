@@ -24,7 +24,7 @@ import styled from 'styled-components/native';
 import { RouteProp, useRoute, useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useCompleteJobMutation } from './jobApiSlice';
-import { updateJobsTabParams } from '../navigation/BottomTabNavigator';
+import { updateJobsTabParams } from '../../navigation/BottomTabNavigator';
 
 type RootStackParamList = {
   JobCompletion: { jobId: string };
